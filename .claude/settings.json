@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkill -f \"next dev\")",
+      "Bash(git add *)",
+      "Bash(git commit --amend -q -m 'Initialize War of Poker application *)",
+      "Bash(git commit -q -m 'Add War of Poker canonical documentation framework *)"
+    ]
+  }
+}

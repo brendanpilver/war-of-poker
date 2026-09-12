@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +14,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "War of Poker",
-  description: "Poker is a battle of decisions. Have a plan.",
+  description:
+    "War of Poker develops practical systems, guides, and tools for players who want to think more clearly and play more deliberately.",
+  applicationName: "War of Poker",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0a09",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -23,7 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col bg-ink font-sans text-bone">
+        {children}
+      </body>
     </html>
   );
 }

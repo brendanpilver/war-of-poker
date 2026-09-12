@@ -11,6 +11,7 @@ they stay empty until real War of Poker assets exist.
 | `characters/` | Ranked cartoon army player illustrations and their supporting art |
 | `textures/`   | Field-manual textures, paper stock, print/press artifacts, background surfaces |
 | `cards/`      | Playing card art, card backs, poker chips, table elements |
+| `books/`      | Covers and product imagery for published War of Poker books |
 
 ## Conventions
 
