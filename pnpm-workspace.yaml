@@ -1,3 +1,8 @@
+# pnpm 9 reads this file as a workspace manifest and requires `packages`.
+# This repository is a single package, so the list is empty.
+packages: []
+
+# Read by pnpm 10+ only; pnpm 9 ignores it.
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
