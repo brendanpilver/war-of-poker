@@ -1,4 +1,4 @@
-import { shortStackPlo } from "@/lib/short-stack-plo";
+import { formatPrice, offers } from "@/lib/offers";
 import { BuyButton } from "./buy-button";
 import { SectionIntro } from "./section-intro";
 
@@ -35,7 +35,7 @@ const faqs = [
   },
   {
     question: "What do I get?",
-    answer: `${shortStackPlo.title} by ${shortStackPlo.author}, published by ${shortStackPlo.publisher}: a digital guide with immediate access, for ${shortStackPlo.price}.`,
+    answer: `Two options. The Complete System (${formatPrice(offers.system.amountCents)}) is the book plus the full seven-piece Field Kit and the 20-Hand Capstone Quiz. The book on its own is ${formatPrice(offers.book.amountCents)}. Both are digital downloads with immediate access.`,
   },
 ];
 
@@ -45,7 +45,7 @@ export function Faq() {
       <div className="mx-auto grid max-w-6xl gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16">
         <div className="lg:sticky lg:top-28 lg:col-span-4 lg:self-start">
           <SectionIntro label="Questions" titleId="faq-title" title="Before you buy." />
-          <BuyButton className="mt-8" />
+          <BuyButton location="faq" className="mt-8" />
         </div>
 
         <div className="divide-y divide-line border-y border-line lg:col-span-8">

@@ -18,23 +18,23 @@ export function SiteHeader() {
             <ul className="flex items-center gap-7">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className={navLinkClass}>
+                  <Link href={link.href} className={navLinkClass}>
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           </nav>
-          <BuyButton size="compact" />
+          <BuyButton size="compact" location="site-header" />
         </div>
       </header>
       <nav aria-label="Primary" className="border-b border-line md:hidden">
         <ul className="mx-auto flex max-w-6xl justify-between gap-4 overflow-x-auto px-5 py-3 whitespace-nowrap sm:justify-start sm:gap-7 sm:px-8">
           {navLinks.map((link) => (
             <li key={link.href}>
-              <a href={link.href} className={navLinkClass}>
+              <Link href={link.href} className={navLinkClass}>
                 {link.label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

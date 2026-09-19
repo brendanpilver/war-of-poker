@@ -15,7 +15,7 @@ export function FinalCta() {
         <p className="mt-6 text-lg text-pretty text-bone-muted">
           Learn the system. Understand the stack. Make better decisions.
         </p>
-        <BuyButton className="mt-10" />
+        <BuyButton location="final-cta" className="mt-10" />
         <p className="mt-5 flex flex-wrap justify-center gap-x-2 gap-y-1 font-mono text-[11px] uppercase tracking-[0.18em] text-bone-faint">
           <span>{shortStackPlo.format}</span>
           <span aria-hidden>·</span>

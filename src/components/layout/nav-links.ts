@@ -1,9 +1,9 @@
-// Homepage anchors until these areas have their own routes. Root-relative so
-// they still resolve correctly from other routes such as /privacy.
+import { PRODUCT_PATH, QUIZ_PATH } from "@/lib/short-stack-plo";
+
+/** Primary navigation. Each entry is a real route. */
 export const navLinks = [
-  { label: "Strategy", href: "/#strategy" },
-  { label: "Books", href: "/#book" },
-  { label: "Articles", href: "/#platform" },
-  { label: "WARPLAN", href: "/#warplan" },
-  { label: "About", href: "/#about" },
+  { label: "Short Stack PLO", href: PRODUCT_PATH },
+  { label: "Reality Check", href: QUIZ_PATH },
+  { label: "Learn", href: "/learn" },
+  { label: "River Potter", href: "/river-potter" },
 ];
