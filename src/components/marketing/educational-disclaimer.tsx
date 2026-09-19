@@ -1,40 +1,34 @@
 /**
  * The educational and risk disclaimer.
  *
- * States plainly what the product is and is not. Nothing here promises a win
- * rate, a return, or a result -- and this section exists so that claim is on
- * the page rather than only in the Terms.
+ * States plainly what the product is and is not. Deliberately quiet: it sits at
+ * the foot of the page in supporting contrast, because it is necessary
+ * information rather than a selling point, and making it visually loud would
+ * read as either a warning or a disclaimer-as-marketing.
  */
 export function EducationalDisclaimer() {
   return (
-    <section
-      aria-labelledby="disclaimer-title"
-      className="border-t border-line bg-ink-raised"
-    >
-      <div className="mx-auto max-w-3xl px-5 py-14 sm:px-8 lg:py-16">
+    <section aria-labelledby="disclaimer-title" className="border-t border-line">
+      <div className="mx-auto max-w-2xl px-5 py-12 sm:px-8">
         <h2
           id="disclaimer-title"
           className="font-mono text-[11px] tracking-[0.18em] text-bone-faint uppercase"
         >
-          Educational material · Please read
+          Educational material
         </h2>
-        <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-pretty text-bone-muted">
+        <div className="mt-4 space-y-3 text-sm leading-relaxed text-pretty text-bone-muted">
           <p>
-            Short Stack PLO is educational material about poker decision-making.
-            It is not a guarantee of profit, winnings, or any particular result,
-            and nothing in it should be read as a promise of a return on the
-            purchase price.
+            Short Stack PLO is educational material about poker
+            decision-making. It is not a guarantee of profit, winnings, or any
+            particular result. Poker involves risk, including the loss of money,
+            and results depend on the games you play, the players in them,
+            variance, and your own decisions.
           </p>
           <p>
-            Poker involves risk, including the loss of money. Results depend on
-            the games you play, the players in them, variance, and your own
-            decisions. No stack depth, system, or framework changes that.
-          </p>
-          <p>
-            The material is practical live strategy, not solver output. Where it
-            gives numbers, they assume the stated conditions — an eight-handed
-            $2/$5 game, no straddle, $300 effective, exact-chip pot-limit
-            counting. Room rules and extra callers change the exact totals.
+            It is practical live strategy, not solver output. Where it gives
+            numbers, they assume the stated conditions — an eight-handed $2/$5
+            game, no straddle, $300 effective, exact-chip pot-limit counting.
+            Room rules and extra callers change the exact totals.
           </p>
           <p>
             Play within your means. If gambling is causing you harm, support is

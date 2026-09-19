@@ -1,128 +1,114 @@
+import { TrackedCta } from "@/components/analytics/tracked-cta";
 import { CardRow } from "@/components/poker/playing-card";
 import { questions } from "@/lib/quiz/reality-check";
-import { SectionIntro } from "./section-intro";
+import { QUIZ_PATH } from "@/lib/short-stack-plo";
+import { Section, SectionHeading } from "./section";
 
 /**
- * One real decision, worked.
+ * One real decision, worked — the page's proof mechanism.
  *
- * Uses the first Reality Check hand — approved published material — rather than
- * a constructed example. It is a $242 decision, which is the point: the cost of
- * getting this single spot wrong is several times the price of the system.
+ * Uses the first Reality Check hand, which is approved published material
+ * rather than a constructed example. It is a $242 decision: the cost of getting
+ * this one spot wrong is several times the price of the system, which is the
+ * whole argument made concrete.
+ *
+ * Kept deliberately short. The long version is the book; this only has to show
+ * that the reasoning is real.
  */
 
 const [acesHand] = questions;
 
-const commonMistake = {
-  label: "The common line",
-  body: "Bet $123. You raised preflop, the SPR is under 3, so you're committed — the Hold'em read of a strong made hand and a low SPR.",
-};
-
 const framework = [
   {
     term: "Hand",
-    body: "Bare aces. No heart, no useful straight coverage. The current nuts is T7, and 75 also makes a straight.",
+    body: "Bare aces. No heart, no useful straight coverage. The nuts right now is T7.",
   },
   {
     term: "SPR",
-    body: "1.97 describes the leverage available. It does not describe your cards, and it is not an instruction to commit.",
+    body: "1.97. That describes the leverage available — not your cards, and not an instruction to commit.",
   },
   {
     term: "Equity",
-    body: "A bet folds the hands with little equity and gets action from the straights, sets and big wraps that have you crushed.",
+    body: "A bet folds the hands with little equity and gets called by the straights, sets and wraps that beat you.",
   },
   {
     term: "Player",
-    body: "This caller has shown down rundowns and suited connectors after calling 3-bets — exactly what connects with 9-8-6.",
+    body: "This opponent has shown down rundowns and suited connectors after calling 3-bets — exactly what 9-8-6 hits.",
   },
 ];
 
-export function ExpensiveDecision() {
+export function ExpensiveDecision({ ctaLocation }: { ctaLocation: string }) {
   return (
-    <section
-      id="expensive-decision"
-      aria-labelledby="expensive-decision-title"
-      className="scroll-mt-24 border-t border-line bg-ink-raised py-20 lg:py-28"
-    >
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <SectionIntro
-          index="04"
-          label="An expensive decision"
-          titleId="expensive-decision-title"
-          title="$242 behind, and the Hold'em answer costs you all of it."
-          className="max-w-3xl"
-        >
-          <p>
-            $2/$5, eight-handed, $300 effective. You 3-bet the button to $58 with
-            aces and the cutoff calls. Here is the flop.
+    <Section id="expensive-decision" tone="raised" aria-labelledby="expensive-decision-title">
+      <SectionHeading
+        id="expensive-decision-title"
+        eyebrow="One expensive decision"
+        lead="$2/$5 live. You 3-bet the button to $58 with aces and the cutoff calls. The flop comes down and they check."
+      >
+        $242 behind, and the Hold&apos;em answer costs you all of it.
+      </SectionHeading>
+
+      <div className="mt-10 grid gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className="lg:col-span-5">
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
+            <CardRow cards={acesHand.hand} label="Your hand" size="lead" />
+            <CardRow cards={acesHand.board} label="Flop" />
+          </div>
+
+          <dl className="mt-8 flex gap-10">
+            <div>
+              <dt className="font-mono text-[11px] tracking-[0.16em] text-bone-faint uppercase">
+                Pot
+              </dt>
+              <dd className="mt-1 text-3xl font-semibold text-bone tabular-nums">$123</dd>
+            </div>
+            <div>
+              <dt className="font-mono text-[11px] tracking-[0.16em] text-bone-faint uppercase">
+                Behind
+              </dt>
+              <dd className="mt-1 text-3xl font-semibold text-gold tabular-nums">$242</dd>
+            </div>
+          </dl>
+
+          <p className="mt-8 text-lg leading-relaxed text-pretty text-bone">
+            SPR is under 2 and you hold aces.{" "}
+            <span className="text-bone-muted">Are you committed?</span>
           </p>
-        </SectionIntro>
+        </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-12">
-          <div className="border border-line bg-ink-card p-6 sm:p-8 lg:col-span-5">
-            <div className="flex flex-wrap items-end gap-x-8 gap-y-5">
-              <CardRow cards={acesHand.hand} label="Your hand" size="lead" />
-              <CardRow cards={acesHand.board} label="Flop" />
-            </div>
+        <div className="lg:col-span-7">
+          <p className="text-2xl leading-snug font-semibold text-balance text-bone sm:text-3xl">
+            No. Check back.
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-pretty text-bone">
+            Your preflop range advantage is not a flop advantage on this board.
+            The same aces bet comfortably on A♦7♠2♣ — the cards didn&apos;t
+            change, the board did.
+          </p>
 
-            <dl className="mt-8 grid grid-cols-2 gap-px border border-line bg-line">
-              <div className="bg-ink-card p-4">
-                <dt className="font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
-                  Pot
+          <dl className="mt-8 space-y-5 border-l border-line pl-6">
+            {framework.map((item) => (
+              <div key={item.term}>
+                <dt className="font-mono text-xs font-medium tracking-[0.18em] text-gold uppercase">
+                  {item.term}
                 </dt>
-                <dd className="mt-1.5 text-2xl font-semibold text-bone tabular-nums">
-                  $123
+                <dd className="mt-1.5 leading-relaxed text-pretty text-bone-muted">
+                  {item.body}
                 </dd>
               </div>
-              <div className="bg-ink-card p-4">
-                <dt className="font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
-                  Behind
-                </dt>
-                <dd className="mt-1.5 text-2xl font-semibold text-gold tabular-nums">
-                  $242
-                </dd>
-              </div>
-            </dl>
+            ))}
+          </dl>
 
-            <p className="mt-6 text-[15px] leading-relaxed text-pretty text-bone-muted">
-              The cutoff checks.
-            </p>
-          </div>
-
-          <div className="lg:col-span-7">
-            <div className="border border-line bg-ink-card p-6 sm:p-8">
-              <p className="font-mono text-[11px] tracking-[0.18em] text-bone-faint uppercase">
-                {commonMistake.label}
-              </p>
-              <p className="mt-3 leading-relaxed text-pretty text-bone-muted">
-                {commonMistake.body}
-              </p>
-            </div>
-
-            <div className="mt-6 border border-line bg-ink-card">
-              <p className="border-b border-line px-6 py-4 font-mono text-[11px] tracking-[0.18em] text-gold uppercase sm:px-8">
-                The same spot, through the four questions
-              </p>
-              <dl className="divide-y divide-line">
-                {framework.map((item) => (
-                  <div key={item.term} className="px-6 py-5 sm:px-8">
-                    <dt className="font-mono text-sm font-medium tracking-[0.18em] text-gold uppercase">
-                      {item.term}
-                    </dt>
-                    <dd className="mt-2 leading-relaxed text-pretty text-bone">
-                      {item.body}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-
-            <p className="mt-6 border-l-2 border-gold pl-4 text-lg leading-relaxed text-pretty text-bone">
-              Check back. On A♦7♠2♣ the same aces bet comfortably — the cards
-              didn&apos;t change, the board did.
-            </p>
-          </div>
+          <TrackedCta
+            href={QUIZ_PATH}
+            location={ctaLocation}
+            label="Try the free 3-Hand Reality Check"
+            className="mt-9 inline-flex w-full items-center justify-center rounded-[2px] border border-gold px-6 py-3.5 text-center font-semibold whitespace-nowrap text-gold transition-colors duration-150 hover:bg-gold hover:text-ink active:translate-y-px sm:w-auto"
+          >
+            Try the free 3-Hand Reality Check
+          </TrackedCta>
         </div>
       </div>
-    </section>
+    </Section>
   );
 }

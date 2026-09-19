@@ -1,6 +1,5 @@
 import { formatPrice, offers } from "@/lib/offers";
-import { BuyButton } from "./buy-button";
-import { SectionIntro } from "./section-intro";
+import { Section, SectionHeading } from "./section";
 
 const faqs = [
   {
@@ -41,32 +40,27 @@ const faqs = [
 
 export function Faq() {
   return (
-    <section id="faq" aria-labelledby="faq-title" className="py-20 lg:py-28">
-      <div className="mx-auto grid max-w-6xl gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16">
-        <div className="lg:sticky lg:top-28 lg:col-span-4 lg:self-start">
-          <SectionIntro label="Questions" titleId="faq-title" title="Before you buy." />
-          <BuyButton location="faq" className="mt-8" />
-        </div>
+    <Section id="faq" aria-labelledby="faq-title">
+      <SectionHeading id="faq-title">Before you buy.</SectionHeading>
 
-        <div className="divide-y divide-line border-y border-line lg:col-span-8">
-          {faqs.map((faq, i) => (
-            <details key={faq.question} open={i === 0} className="group">
-              <summary className="flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-lg leading-snug font-medium text-bone transition-colors duration-150 hover:text-gold-light [&::-webkit-details-marker]:hidden">
-                {faq.question}
-                <span
-                  aria-hidden
-                  className="font-mono text-xl leading-none text-gold transition-transform duration-150 group-open:rotate-45"
-                >
-                  +
-                </span>
-              </summary>
-              <p className="max-w-2xl pb-6 leading-relaxed text-pretty text-bone-muted">
-                {faq.answer}
-              </p>
-            </details>
-          ))}
-        </div>
+      <div className="mt-8 divide-y divide-line border-y border-line">
+        {faqs.map((faq, i) => (
+          <details key={faq.question} open={i === 0} className="group">
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-lg leading-snug font-medium text-bone transition-colors duration-150 hover:text-gold-light [&::-webkit-details-marker]:hidden">
+              {faq.question}
+              <span
+                aria-hidden
+                className="font-mono text-xl leading-none text-gold transition-transform duration-150 group-open:rotate-45"
+              >
+                +
+              </span>
+            </summary>
+            <p className="max-w-2xl pb-6 leading-relaxed text-pretty text-bone-muted">
+              {faq.answer}
+            </p>
+          </details>
+        ))}
       </div>
-    </section>
+    </Section>
   );
 }
