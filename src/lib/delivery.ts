@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "./env";
+import { fieldKit } from "./field-kit";
 import type { ProductId } from "./offers";
 
 /**
@@ -32,54 +33,19 @@ export type Asset = {
   objectPath: string;
 };
 
-/**
- * The Field Kit asset names are the ones used in the published product set, not
- * paraphrases of them.
- */
+/** The Field Kit assets are derived from the catalogue so the names a buyer
+ * sees on the sales page and the files they receive cannot drift apart. */
+const fieldKitAssets: Asset[] = fieldKit.map((piece) => ({
+  id: piece.id,
+  name: piece.name,
+  objectPath: piece.objectPath,
+}));
+
 const bookAsset: Asset = {
   id: "book",
   name: "Short Stack PLO (PDF)",
   objectPath: "short-stack-plo/Short_Stack_PLO.pdf",
 };
-
-const fieldKitAssets: Asset[] = [
-  {
-    id: "field-kit-01",
-    name: "Full-Hand Decision Map",
-    objectPath: "short-stack-plo/field-kit/01_Full-Hand_Decision_Map.pdf",
-  },
-  {
-    id: "field-kit-02",
-    name: "60 BB Preflop + Pot Geometry Guide",
-    objectPath: "short-stack-plo/field-kit/02_60BB_Preflop_and_Pot_Geometry_Guide.pdf",
-  },
-  {
-    id: "field-kit-03",
-    name: "Flop + Draw Quality Card",
-    objectPath: "short-stack-plo/field-kit/03_Flop_and_Draw_Quality_Card.pdf",
-  },
-  {
-    id: "field-kit-04",
-    name: "River Decision Card",
-    objectPath: "short-stack-plo/field-kit/04_River_Decision_Card.pdf",
-  },
-  {
-    id: "field-kit-05",
-    name: "Player Read + Live Exploit Card",
-    objectPath: "short-stack-plo/field-kit/05_Player_Read_and_Live_Exploit_Card.pdf",
-  },
-  {
-    id: "field-kit-06",
-    name: "Session + Hand Review Workbook",
-    objectPath: "short-stack-plo/field-kit/06_Session_and_Hand_Review_Workbook.pdf",
-  },
-  {
-    id: "field-kit-07",
-    name: "20-Hand Capstone Quiz + Answer Key",
-    objectPath:
-      "short-stack-plo/field-kit/07_20-Hand_Capstone_Quiz_and_Answer_Key.pdf",
-  },
-];
 
 export const productAssets: Record<ProductId, Asset[]> = {
   book: [bookAsset],

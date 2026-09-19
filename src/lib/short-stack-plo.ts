@@ -2,9 +2,9 @@ export const shortStackPlo = {
   title: "Short Stack PLO",
   subtitle: "A Practical Strategy for Shallow-Stack Live Pot-Limit Omaha",
   author: "River Potter",
+  authorTitle: "PLO Specialist, War of Poker",
   publisher: "War of Poker",
-  price: "$29",
-  format: "Digital guide",
+  format: "Digital download",
   access: "Immediate access",
   cover: {
     src: "/books/short-stack-plo-cover.jpg",
@@ -13,15 +13,15 @@ export const shortStackPlo = {
   },
 };
 
-/** The homepage section that presents the book for purchase. */
-export const PURCHASE_SECTION_ID = "book";
+/** The sales page. Prices live in `src/lib/offers.ts`. */
+export const PRODUCT_PATH = "/short-stack-plo";
+
+/** The free acquisition asset. */
+export const QUIZ_PATH = "/plo-reality-check";
 
 /**
- * TODO: Checkout is not configured. Set this to the checkout URL once it exists
- * and every "Get Short Stack PLO" call to action will use it. Until then they
- * lead to the purchase section on the homepage.
+ * Where a "get the book" call to action goes. Checkout itself is started by
+ * `BuyOfferButton`, which needs an offer id, so calls to action outside the
+ * sales page send the reader to the pricing block to choose one.
  */
-const checkoutUrl: string | null = null;
-
-export const shortStackPloCheckoutHref =
-  checkoutUrl ?? `/#${PURCHASE_SECTION_ID}`;
+export const productPricingHref = `${PRODUCT_PATH}#pricing`;

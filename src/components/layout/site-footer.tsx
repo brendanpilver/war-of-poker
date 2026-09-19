@@ -13,14 +13,11 @@ const headingClass =
   "font-mono text-xs uppercase tracking-[0.18em] text-bone-faint";
 
 export function SiteFooter() {
-  const exploreLinks = navLinks.filter((link) => link.href !== "/#about");
-
   return (
-    <footer id="about" className="border-t border-line bg-ink-raised">
+    <footer className="border-t border-line bg-ink-raised">
       <div className="mx-auto grid max-w-6xl gap-12 px-5 py-14 sm:px-8 lg:grid-cols-12 lg:py-16">
         <div className="lg:col-span-6">
           <BrandLogo height={96} className="h-20 w-auto" />
-          <h2 className="sr-only">About War of Poker</h2>
           <p className="mt-6 max-w-md text-pretty text-bone-muted">
             War of Poker develops practical systems, guides, and tools for
             players who want to think more clearly and play more deliberately.
@@ -31,14 +28,14 @@ export function SiteFooter() {
           <div>
             <h2 className={headingClass}>Explore</h2>
             <ul className="mt-4 space-y-3">
-              {exploreLinks.map((link) => (
+              {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-bone-muted transition-colors duration-150 hover:text-bone"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

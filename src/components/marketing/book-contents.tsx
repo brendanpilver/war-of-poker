@@ -62,7 +62,7 @@ export function BookContents() {
               each stage.
             </p>
           </SectionIntro>
-          <BuyButton className="mt-8" />
+          <BuyButton location="book-contents" className="mt-8" />
         </div>
 
         <div className="reveal grid gap-px border border-line bg-line sm:grid-cols-2 lg:col-span-8">
