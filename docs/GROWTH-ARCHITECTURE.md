@@ -155,6 +155,20 @@ promotional amount can move without touching a component.
 
 ---
 
+## Site origin
+
+`siteUrl` ([`src/lib/site.ts`](../src/lib/site.ts)) is not cosmetic: Stripe's
+success and cancel URLs, every link in every email, canonical tags, OpenGraph
+URLs, and the sitemap are all built from it.
+
+It defaults to `https://warofpoker.com`, so **production needs no configuration
+to be correct**. Any other host overrides it with `NEXT_PUBLIC_SITE_URL`; on
+Vercel this is detected automatically. A deploy whose origin is not the
+production domain is served `noindex` and a `Disallow: /` robots.txt, so a
+staging copy never competes with the real site in search.
+
+---
+
 ## Required external setup
 
 Nothing below is done. The application builds and runs without any of it; each
@@ -227,9 +241,11 @@ works.
 
 ## Open items
 
-- `siteUrl` is hard-coded to `https://warofpoker.com` in
-  [`src/lib/site.ts`](../src/lib/site.ts). Stripe redirect URLs derive from it,
-  so a preview deployment will redirect to production after checkout.
+- **Hosting is not yet Node-capable.** This app cannot be statically exported:
+  the Stripe webhook, checkout, signed downloads, and `/growth` all render on
+  demand and need a Node runtime running `next start` behind a reverse proxy.
+  The production target is Hostinger, replacing the current PHP site at
+  `warofpoker.com` at launch — confirm the plan runs Node well before then.
 - The contact inbox and the Terms' governing law are still unconfirmed
   defaults — see `src/lib/legal.ts`.
 - `/learn` has no articles. This is deliberate; the queued topics are listed in

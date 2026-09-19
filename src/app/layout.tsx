@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { AnalyticsTracker } from "@/components/analytics/analytics-provider";
-import { siteUrl } from "@/lib/site";
+import { isProductionSite, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   description:
     "War of Poker develops practical systems, guides, and tools for players who want to think more clearly and play more deliberately.",
   applicationName: "War of Poker",
+  // robots.txt already disallows staging; this is belt and braces for a page
+  // reached by a direct link rather than a crawl of the root.
+  ...(isProductionSite ? {} : { robots: { index: false, follow: false } }),
 };
 
 export const viewport: Viewport = {

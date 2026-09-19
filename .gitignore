@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# The secret-free template is tracked so required variables are documented.
+# Every real .env file above stays ignored.
+!.env.example
 
 # local agent/editor settings
 .claude/settings.local.json
