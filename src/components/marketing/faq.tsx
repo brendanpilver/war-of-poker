@@ -1,5 +1,4 @@
 import { formatPrice, offers } from "@/lib/offers";
-import { shortStackPlo } from "@/lib/short-stack-plo";
 import { BuyButton } from "./buy-button";
 import { SectionIntro } from "./section-intro";
 

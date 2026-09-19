@@ -26,6 +26,8 @@ export type Choice = {
 export type SituationFact = {
   label: string;
   value: string;
+  /** Spans the full row. Set on long values such as a player read. */
+  wide?: boolean;
 };
 
 /** A row of the Question 2 out-counting table. */
@@ -100,7 +102,11 @@ export const questions: QuizQuestion[] = [
       { label: "Position", value: "Button vs cutoff" },
       { label: "Pot", value: "$123" },
       { label: "Behind", value: "$242" },
-      { label: "Read", value: "Rundowns and suited connectors after calling 3-bets" },
+      {
+        label: "Read",
+        value: "Rundowns and suited connectors after calling 3-bets",
+        wide: true,
+      },
     ],
     prompt: "What do you do, and why?",
     choices: [
@@ -190,6 +196,7 @@ export const questions: QuizQuestion[] = [
         label: "Read",
         value:
           "Leads flops with sets and two pair more often than draws; has 4-bet overpairs preflop (MEDIUM confidence)",
+        wide: true,
       },
     ],
     prompt: "What do you do, and why?",

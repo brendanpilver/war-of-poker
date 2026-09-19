@@ -70,11 +70,13 @@ export function QuizQuestionCard({
             streetBreakIndex={question.boardTurnIndex}
           />
         </div>
-        <dl className="grid grid-cols-2 divide-line sm:grid-cols-3">
+        {/* gap-px over a line-coloured ground gives hairline rules without a
+            dangling border when the row is not full. */}
+        <dl className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3">
           {question.facts.map((fact) => (
             <div
               key={fact.label}
-              className="border-b border-r border-line p-3.5 last:border-b-0 sm:p-4"
+              className={`bg-ink-raised p-3.5 sm:p-4 ${fact.wide ? "col-span-2 sm:col-span-3" : ""}`}
             >
               <dt className="font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
                 {fact.label}
