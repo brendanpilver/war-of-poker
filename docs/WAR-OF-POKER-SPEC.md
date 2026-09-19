@@ -191,7 +191,7 @@ canonical doctrine rather than inventing or silently changing the doctrine.**
 - TypeScript, strict mode
 - Tailwind CSS
 - ESLint
-- pnpm
+- npm
 - `/src` directory layout
 - Git
 

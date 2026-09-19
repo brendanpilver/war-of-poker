@@ -30,26 +30,30 @@ Substantive product work is intentionally not started. It begins after
 - TypeScript (strict)
 - Tailwind CSS
 - ESLint
-- pnpm
+- npm
 
 No database, auth, payments, CMS, analytics, component library, or AI integration
 is installed. Each will be added deliberately when it is needed.
 
 ## Run locally
 
-Requires Node.js and [pnpm](https://pnpm.io).
+Requires Node.js 20.9 or newer (Next.js 16's minimum); npm ships with it.
+`npm test` additionally needs **Node 22.18 or newer**, because the test runner
+relies on Node stripping TypeScript natively rather than on a transpiler.
 
 ```bash
-pnpm install
-pnpm dev        # http://localhost:3000
+npm install
+npm run dev     # http://localhost:3000
 ```
 
 Other commands:
 
 ```bash
-pnpm lint       # ESLint
-pnpm build      # production build
-pnpm start      # serve the production build
+npm run lint       # ESLint
+npm run typecheck  # tsc --noEmit
+npm test           # unit tests
+npm run build      # production build
+npm start          # serve the production build
 ```
 
 ## Canonical documentation
@@ -90,5 +94,5 @@ Human and AI contributors follow the same rules, written in
 4. **Flag conflicts instead of resolving them by editing doctrine.** Doctrine
    changes require explicit direction from the project owner.
 5. **Keep the stack minimal**; propose dependencies rather than installing them.
-6. **Run `pnpm lint` and `pnpm build`** before considering a change complete.
+6. **Run `npm run lint` and `npm run build`** before considering a change complete.
 7. **Never commit secrets.** `.env*` stays ignored.

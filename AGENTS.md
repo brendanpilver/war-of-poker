@@ -70,7 +70,7 @@ question for the project owner — **not an invitation to fill in the answer.**
   match its conventions rather than importing your own.
 - **Favor maintainability over cleverness.** Boring, obvious code wins.
 - **Avoid unnecessary dependencies.** The stack is deliberately minimal: Next.js
-  (App Router), TypeScript, Tailwind CSS, ESLint, pnpm. Supabase, Stripe,
+  (App Router), TypeScript, Tailwind CSS, ESLint, npm. Supabase, Stripe,
   shadcn/ui, analytics, AI APIs, and CMS systems are **deliberately absent** and
   are added only on explicit direction. Propose, don't install.
 - **Avoid premature abstraction.** Do not build layers, registries, or generic
@@ -119,12 +119,13 @@ owner.
 ## Working commands
 
 ```bash
-pnpm install    # install dependencies
-pnpm dev        # local development server
-pnpm lint       # ESLint
-pnpm build      # production build — must pass before a change is done
+npm install     # install dependencies
+npm ci          # install exactly the lockfile (CI and deploys)
+npm run dev     # local development server
+npm run lint    # ESLint
+npm run build   # production build — must pass before a change is done
 ```
 
-Run `pnpm lint` and `pnpm build` before declaring work complete.
+Run `npm run lint` and `npm run build` before declaring work complete.
 
 Do not push to a remote or create a GitHub repository without explicit direction.
