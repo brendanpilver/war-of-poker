@@ -24,4 +24,4 @@ export const PURCHASE_SECTION_ID = "book";
 const checkoutUrl: string | null = null;
 
 export const shortStackPloCheckoutHref =
-  checkoutUrl ?? `#${PURCHASE_SECTION_ID}`;
+  checkoutUrl ?? `/#${PURCHASE_SECTION_ID}`;

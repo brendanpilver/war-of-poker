@@ -1,15 +1,19 @@
+import Link from "next/link";
 import { shortStackPlo } from "@/lib/short-stack-plo";
 import { BrandLogo } from "./brand-logo";
 import { navLinks } from "./nav-links";
 
-// TODO: These pages do not exist yet. Give each an href when it does.
-const pendingLinks = ["Contact", "Privacy", "Terms"];
+const legalLinks = [
+  { label: "Contact", href: "/contact" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+];
 
 const headingClass =
   "font-mono text-xs uppercase tracking-[0.18em] text-bone-faint";
 
 export function SiteFooter() {
-  const exploreLinks = navLinks.filter((link) => link.href !== "#about");
+  const exploreLinks = navLinks.filter((link) => link.href !== "/#about");
 
   return (
     <footer id="about" className="border-t border-line bg-ink-raised">
@@ -42,12 +46,14 @@ export function SiteFooter() {
           <div>
             <h2 className={headingClass}>Contact &amp; Legal</h2>
             <ul className="mt-4 space-y-3">
-              {pendingLinks.map((label) => (
-                <li key={label} className="flex items-baseline gap-2 text-bone-faint">
-                  {label}
-                  <span className="font-mono text-[10px] uppercase tracking-[0.14em]">
-                    Soon
-                  </span>
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-bone-muted transition-colors duration-150 hover:text-bone"
+                  >
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>
