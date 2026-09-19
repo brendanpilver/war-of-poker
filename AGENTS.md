@@ -69,10 +69,12 @@ question for the project owner — **not an invitation to fill in the answer.**
 - **Inspect existing code before changing architecture.** Read what is there;
   match its conventions rather than importing your own.
 - **Favor maintainability over cleverness.** Boring, obvious code wins.
-- **Avoid unnecessary dependencies.** The stack is deliberately minimal: Next.js
-  (App Router), TypeScript, Tailwind CSS, ESLint, npm. Supabase, Stripe,
-  shadcn/ui, analytics, AI APIs, and CMS systems are **deliberately absent** and
-  are added only on explicit direction. Propose, don't install.
+- **Avoid unnecessary dependencies.** The stack is deliberately small: Next.js 16
+  (App Router), React 19, TypeScript, Tailwind CSS, ESLint, npm — plus Supabase,
+  Stripe, and Resend, each added under explicit direction to build the Short Stack
+  PLO funnel. **shadcn/ui, AI APIs, CMS systems, and third-party analytics remain
+  deliberately absent.** The rule is unchanged: anything new is added only on
+  explicit direction. Propose, don't install.
 - **Avoid premature abstraction.** Do not build layers, registries, or generic
   systems for a single caller. Do not create speculative directories, components,
   or types.
@@ -81,8 +83,12 @@ question for the project owner — **not an invitation to fill in the answer.**
   where the brand is not yet defined, keep it plain rather than inventing a look.
 - **TypeScript stays strict.** `strict: true` is not to be relaxed, and `any`,
   non-null assertions, and `@ts-expect-error` need a real justification.
-- **Tests accompany meaningful logic once implementation begins.** No test
-  framework is installed yet; adding one is a deliberate decision, not a drive-by.
+- **Tests accompany meaningful logic.** No test framework is installed and none
+  should be: the runner is Node's built-in `node --test`, relying on Node
+  stripping TypeScript natively, with `tests/register.mjs` supplying the `@/`
+  alias. Business-critical paths are covered — quiz scoring, attribution,
+  input validation, delivery tokens, and Stripe webhook signature verification.
+  Changes to those come with tests.
 - **Document substantial architectural decisions.** A meaningful choice — data
   layer, auth model, rendering strategy, content storage — gets written down in
   `docs/` (and reflected in `docs/WAR-OF-POKER-SPEC.md` § Technical Architecture)
@@ -94,38 +100,82 @@ question for the project owner — **not an invitation to fill in the answer.**
 
 - **Never commit security-sensitive information**: API keys, tokens, secrets,
   credentials, private URLs, or personal data.
-- **`.env*` files stay ignored.** They are in `.gitignore`; do not un-ignore them,
-  do not force-add them, and do not paste their contents into code, docs, or
-  commit messages.
-- Do not add analytics, tracking, or third-party scripts without explicit
-  direction.
+- **Real `.env*` files stay ignored.** Do not un-ignore them, do not force-add
+  them, and do not paste their contents into code, docs, or commit messages. The
+  single exception is `.env.example`, which is tracked deliberately: it documents
+  every required variable and contains no values.
+- **No third-party analytics, tracking, or marketing scripts.** Measurement is
+  first-party by design: events post to `/api/events` and are stored in our own
+  database. Adding an external tag, tracker, or pixel needs explicit direction.
+
+### Payment and delivery invariants
+
+These hold the funnel's money and files safe. Do not relax one for convenience.
+
+- **Never trust a price from the browser.** `/api/checkout` accepts an offer id
+  and resolves the amount server-side from `src/lib/offers.ts`.
+- **A purchase is recorded only by the Stripe webhook**, after the signature is
+  verified against the raw request body. The success redirect is not proof of
+  payment.
+- **The Supabase service-role key is server-side only.** Row Level Security is on
+  with no policies, so every table is unreachable from a browser.
+- **Paid files are never publicly addressable.** They live in a private bucket
+  behind signed, expiring tokens, and a token is valid only for its own product.
 
 ---
 
 ## Current project status
 
-The repository is a **foundation only**: scaffolded application, canonical
-documentation structure, asset directories, and agent governance. The homepage is
-an intentional minimal placeholder.
+War of Poker is in **active product development.** The first commercial product,
+**Short Stack PLO** by River Potter, is built, and its customer-acquisition funnel
+is implemented end to end:
 
-**Do not begin product development** — homepage design, Supabase, authentication,
-database schema, AI content generation, blog, Field Manual, player characters,
-ecommerce, newsletters, dashboards, analytics, Stripe, APIs, or admin systems —
-until `docs/WAR-OF-POKER-SPEC.md` and `docs/BRAND.md` are completed by the project
-owner.
+```
+CONTENT -> QUIZ -> EMAIL -> PRODUCT PAGE -> PURCHASE -> DELIVERY -> ANALYTICS
+```
+
+**What now exists:**
+
+- Routes: the homepage, the `/short-stack-plo` sales page, the free
+  `/plo-reality-check` quiz, `/learn`, `/river-potter`, `/thank-you`,
+  `/downloads`, and a token-gated `/growth` dashboard.
+- **Supabase** — subscribers, events, purchases, content pieces, email sends.
+- **Stripe Checkout** — the $29 book and the $49 Complete System, plus a
+  configurable quiz-completer offer.
+- **Resend** — the Survival Card and a six-step email sequence.
+- **First-party analytics** — content-ID attribution carried from a published
+  piece through quiz, signup, and checkout onto the recorded sale.
+- **Protected delivery** — paid files behind signed, expiring tokens.
+
+Architecture, security decisions, and the external setup still outstanding are
+recorded in [`docs/GROWTH-ARCHITECTURE.md`](docs/GROWTH-ARCHITECTURE.md), which is
+an implementation record, **not** doctrine.
+
+**Still not started, and still needing explicit direction:** WARPLAN as a
+product, the Field Manual, War Report, Arsenal, player characters and the ranks
+roster, the training system, user accounts or authentication, AI content
+generation, and merchandise.
+
+**The five canonical files in `docs/` remain largely `TODO`.** Building this
+funnel did not resolve them, and they still govern brand, WARPLAN, characters,
+and content. A `TODO` is still an open question for the project owner — not an
+invitation to fill it in.
 
 ---
 
 ## Working commands
 
 ```bash
-npm install     # install dependencies
-npm ci          # install exactly the lockfile (CI and deploys)
-npm run dev     # local development server
-npm run lint    # ESLint
-npm run build   # production build — must pass before a change is done
+npm install       # install dependencies
+npm ci            # install exactly the lockfile (CI and deploys)
+npm run dev       # local development server
+npm run lint      # ESLint
+npm run typecheck # tsc --noEmit
+npm test          # unit tests
+npm run build     # production build — must pass before a change is done
 ```
 
-Run `npm run lint` and `npm run build` before declaring work complete.
+Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build` before
+declaring work complete.
 
 Do not push to a remote or create a GitHub repository without explicit direction.
