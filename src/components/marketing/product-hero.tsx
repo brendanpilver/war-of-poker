@@ -23,12 +23,18 @@ import { BuyOfferButton } from "./buy-offer-button";
  * both rows in the right-hand column, which puts the left column back to the
  * single stack it has always been.
  *
- * That order only fits a phone because the two lines above it are short. The
- * subtitle carries the author rather than giving it a line of its own, and the
- * value proposition is one sentence; both used to run three lines on a 390px
- * screen and now run two. `shortStackPlo.subtitle` is the book's real subtitle
- * and stays as it is — metadata and the cover's alt text quote it — so this is
- * a hero-length rewrite of the same claim, not a change to the product.
+ * That order only fits a phone because there is very little above it: the
+ * headline, one byline, one line of argument. A paragraph describing the book
+ * as a decision system for expensive spots used to sit here too, and it was
+ * cut rather than shortened — `ExpensiveDecision` follows immediately and makes
+ * that case with a real $242 hand, so the hero was spending a line to preempt
+ * its own proof. The byline holds on one line down to 375px, which is what buys
+ * the cover its full width back.
+ *
+ * `shortStackPlo.subtitle` is the book's real subtitle and stays as it is —
+ * metadata and the cover's alt text quote it, and the cover art itself carries
+ * it here — so the byline is a hero-length version, not a change to the
+ * product.
  */
 
 export function ProductHero({ variant }: { variant: "home" | "product" }) {
@@ -48,17 +54,11 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
           </h1>
 
           <p className="mt-3 text-[15px] leading-snug text-pretty text-bone-faint sm:mt-4">
-            Practical shallow-stack strategy for live PLO &middot;{" "}
-            {shortStackPlo.author}
+            Shallow-stack live PLO strategy by {shortStackPlo.author}
           </p>
 
           <p className="mt-5 max-w-lg text-xl leading-snug text-balance text-bone sm:mt-6 sm:text-2xl">
             Stop bringing Hold&apos;em instincts into PLO.
-          </p>
-
-          <p className="mt-4 max-w-lg text-lg leading-relaxed text-pretty text-bone-muted">
-            A practical decision system for live PLO, where one call can cost
-            hundreds.
           </p>
         </div>
 
@@ -66,7 +66,7 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
           <BookCover
             sizes="(min-width: 1024px) 360px, 240px"
             loading="eager"
-            className="mx-auto w-full max-w-[9rem] sm:max-w-[15rem] lg:max-w-none"
+            className="mx-auto w-full max-w-[11.5rem] sm:max-w-[15rem] lg:max-w-none"
           />
         </div>
 
