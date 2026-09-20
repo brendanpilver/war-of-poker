@@ -75,7 +75,7 @@ export function InsideTheBook({ compact = false }: { compact?: boolean }) {
         }
       >
         {compact
-          ? "Three spots where Hold'em instincts get expensive."
+          ? "Three hands where Hold'em instincts break down."
           : "The cards are not the decision."}
       </SectionHeading>
 
