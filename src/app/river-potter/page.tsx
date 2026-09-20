@@ -4,8 +4,8 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { BookCover } from "@/components/marketing/book-cover";
 import { BookSubtitle } from "@/components/marketing/book-subtitle";
-import { fourQuestions } from "@/lib/quiz/reality-check";
-import { PRODUCT_PATH, QUIZ_PATH, shortStackPlo } from "@/lib/short-stack-plo";
+import { fourQuestions, totalHands } from "@/lib/quiz/hands";
+import { CHALLENGE_PATH, PRODUCT_PATH, shortStackPlo } from "@/lib/short-stack-plo";
 import { siteUrl } from "@/lib/site";
 
 /**
@@ -115,19 +115,19 @@ export default function RiverPotterPage() {
 
             <div className="mt-12 border-t border-line pt-8">
               <h3 className="text-xl font-semibold text-bone">
-                The 3-Hand PLO Reality Check
+                The {totalHands}-Hand Short Stack PLO Challenge
               </h3>
               <p className="mt-2 leading-relaxed text-pretty text-bone-muted">
-                A free three-hand diagnostic. Three spots where Hold&apos;em
-                instincts get expensive.
+                Ten live hands, free. Ten spots where Hold&apos;em instincts get
+                expensive, each one worked through as you answer it.
               </p>
               <TrackedCta
-                href={QUIZ_PATH}
-                location="river-potter-quiz"
-                label="Reality Check"
+                href={CHALLENGE_PATH}
+                location="river-potter-challenge"
+                label="10-Hand Challenge"
                 className="mt-4 inline-block text-bone underline decoration-bone/30 underline-offset-4 transition-colors hover:decoration-gold"
               >
-                Take the Reality Check
+                Take the {totalHands}-Hand Challenge
               </TrackedCta>
             </div>
           </section>

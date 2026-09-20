@@ -4,11 +4,19 @@ import { sendEmail } from "@/lib/email/client";
 import { renderHtml, renderText, welcomeEmail } from "@/lib/email/templates";
 import { siteUrl } from "@/lib/site";
 import { upsertSubscriber } from "@/lib/subscribers";
+import { concepts } from "@/lib/quiz/concepts";
+import { totalHands } from "@/lib/quiz/hands";
+import { scoreChallenge, type ChallengeAnswers } from "@/lib/quiz/scoring";
 import { supabaseAdmin } from "@/lib/supabase";
 import { parseAttributionInput, parseEmail, parseText } from "@/lib/validation";
 
 /**
- * Email capture, and the Survival Card send that follows it.
+ * Email capture, and the results send that follows it.
+ *
+ * This is the funnel's retention path, not its gate: a challenge completer
+ * reaches checkout without ever coming here (see
+ * `src/components/quiz/challenge-result.tsx`). What arrives on this route is
+ * someone who chose to be kept in touch with instead.
  *
  * Order matters: the subscriber row is written first and the email second, so a
  * mail-provider outage costs us a delivery we can retry, not the address
@@ -18,9 +26,29 @@ import { parseAttributionInput, parseEmail, parseText } from "@/lib/validation";
 /** Where the Survival Card is served from. Free, so no signed token. */
 const SURVIVAL_CARD_PATH = "/downloads/nlh-to-plo-survival-card.pdf";
 
+/** The sales page showing the earned price. `src=results-email` attributes the click. */
+const PLAYER_PRICE_PATH = "/short-stack-plo?src=results-email&offer=player";
+
+/**
+ * Re-scores the submitted answers here rather than trusting the browser's
+ * concept lists, so the email can only ever name a real concept of a real hand.
+ * Unrecognised answers simply score as missed.
+ */
+function conceptLabels(answers: unknown): { strong: string[]; watch: string[] } {
+  if (typeof answers !== "object" || answers === null) {
+    return { strong: [], watch: [] };
+  }
+  const result = scoreChallenge(answers as ChallengeAnswers);
+  return {
+    strong: result.strongConceptIds.map((id) => concepts[id].label),
+    watch: result.watchConceptIds.map((id) => concepts[id].label),
+  };
+}
+
+/** Bounded by the challenge's length; see `subscribers_quiz_score_check`. */
 function parseQuizScore(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isInteger(value)) return null;
-  return value >= 0 && value <= 3 ? value : null;
+  return value >= 0 && value <= totalHands ? value : null;
 }
 
 export async function POST(request: Request) {
@@ -60,8 +88,8 @@ export async function POST(request: Request) {
     attribution,
     quizScore,
     quizCompleted,
-    // Stored as given; the shape is our own quiz's answers, already bounded by
-    // the three questions it can contain.
+    // Stored as given; the shape is our own challenge's answers, already
+    // bounded by the ten hands it can contain.
     quizAnswers: quizCompleted ? input.quizAnswers : null,
     offerShown: quizCompleted ? "system-quiz" : null,
   });
@@ -85,9 +113,16 @@ export async function POST(request: Request) {
     },
   });
 
+  const { strong, watch } = quizCompleted
+    ? conceptLabels(input.quizAnswers)
+    : { strong: [], watch: [] };
+
   const content = welcomeEmail({
     quizScore,
+    strongConcepts: strong,
+    watchConcepts: watch,
     survivalCardUrl: `${siteUrl}${SURVIVAL_CARD_PATH}`,
+    playerPriceUrl: `${siteUrl}${PLAYER_PRICE_PATH}`,
   });
 
   const sent = await sendEmail({

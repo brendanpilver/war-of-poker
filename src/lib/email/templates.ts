@@ -1,4 +1,5 @@
 import { formatPrice, offers } from "@/lib/offers";
+import { totalHands } from "@/lib/quiz/hands";
 import { siteUrl } from "@/lib/site";
 
 /**
@@ -6,11 +7,19 @@ import { siteUrl } from "@/lib/site";
  *
  * Every strategic claim below is drawn from the approved Short Stack PLO
  * publication set -- the Survival Card's eight Hold'em-to-PLO translation
- * errors and the three Reality Check hands. Nothing here introduces strategy
- * that is not already in that material.
+ * errors and the hands of the 10-Hand Challenge. Nothing here introduces
+ * strategy that is not already in that material.
  *
- * Email 0 is transactional and sends the moment an address is captured. Emails
- * 1-5 are dispatched on the schedule in `sequence`, by `/api/email/dispatch`.
+ * Email 0 is transactional and sends the moment an address is captured. It is
+ * the retention half of the results screen: a reader who was not ready to buy
+ * gets their score back, the concepts worth reviewing, the Survival Card, and
+ * the link that returns them to their player price. Emails 1-5 are dispatched
+ * on the schedule in `sequence`, by `/api/email/dispatch`.
+ *
+ * The two offer-led steps link to the player price rather than the public one.
+ * The challenge is the only way onto this list, so everyone receiving them
+ * earned it; the link is not a security boundary either way, because
+ * `/api/checkout` resolves every amount server-side from the offer id.
  */
 
 export type SequenceKey =
@@ -32,7 +41,9 @@ type Block =
   | { kind: "p"; text: string }
   | { kind: "h"; text: string }
   | { kind: "quote"; text: string }
-  | { kind: "list"; items: string[] };
+  | { kind: "list"; items: string[] }
+  /** A second, quieter link where the single `cta` button is already spoken for. */
+  | { kind: "link"; text: string; href: string };
 
 const signature = "— River Potter · PLO Specialist, War of Poker";
 
@@ -43,38 +54,89 @@ function link(path: string, sequenceKey: SequenceKey): string {
   return `${siteUrl}${path}?src=email-${sequenceKey}`;
 }
 
+/**
+ * The sales page, showing the earned price rather than the public one. See
+ * `src/components/marketing/player-price-notice.tsx`.
+ */
+function playerPriceLink(sequenceKey: SequenceKey): string {
+  return `${link("/short-stack-plo", sequenceKey)}&offer=player`;
+}
+
+/**
+ * Email 0: the player's results, the Survival Card, and the way back to their
+ * player price.
+ *
+ * The concept lists are the same diagnostic the results screen showed, carried
+ * over so the email is a continuation of the challenge rather than a receipt
+ * for an address. They are computed by `/api/subscribe` from the answers that
+ * arrive with the signup, so nothing here has to be generated.
+ */
 export function welcomeEmail(options: {
   quizScore: number | null;
+  /** Concept labels answered correctly, in hand order. */
+  strongConcepts?: string[];
+  /** Concept labels worth reviewing, in hand order. */
+  watchConcepts?: string[];
   survivalCardUrl: string;
+  playerPriceUrl: string;
 }): EmailContent {
-  const scoreLine =
-    options.quizScore === null
-      ? "Here is the Survival Card you asked for."
-      : options.quizScore === 3
-        ? "Three for three on the Reality Check. Here is the Survival Card."
-        : `You scored ${options.quizScore} of 3 on the Reality Check. Here is the Survival Card.`;
+  const finished = options.quizScore !== null;
+  const strong = options.strongConcepts ?? [];
+  const watch = options.watchConcepts ?? [];
 
-  const promo = offers["system-quiz"];
+  const scoreLine = !finished
+    ? "Here is the Survival Card you asked for."
+    : options.quizScore === totalHands
+      ? `${totalHands} for ${totalHands} on the challenge. Here are your results, and the Survival Card.`
+      : `You matched ${options.quizScore} of ${totalHands} decisions in the challenge. Here are your results, and the Survival Card.`;
+
+  const player = offers["system-quiz"];
+  const publicPrice = player.compareAtCents ?? offers.system.amountCents;
+
+  const blocks: Block[] = [{ kind: "p", text: scoreLine }];
+
+  if (strong.length > 0) {
+    blocks.push({ kind: "h", text: "You had these" });
+    blocks.push({ kind: "list", items: strong });
+  }
+  if (watch.length > 0) {
+    blocks.push({ kind: "h", text: "Worth reviewing" });
+    blocks.push({ kind: "list", items: watch });
+    blocks.push({
+      kind: "p",
+      text: "Each of those is covered in the book and worked onto a printable card in the Field Kit.",
+    });
+  }
+
+  blocks.push({
+    kind: "p",
+    text: "The NLH Player's PLO Survival Card: eight expensive Hold'em habits to drop before you sit in a PLO game. Two pages — the eight translation errors, the four street questions, and the $2/$5 60 BB numbers worth remembering.",
+  });
+  blocks.push({
+    kind: "p",
+    text: "Over the next week or so I'll send you four short notes working through the ideas behind those hands — where Hold'em instincts misfire, how to count and grade a big draw, and what changes when the turn changes the board.",
+  });
+
+  if (finished) {
+    blocks.push({ kind: "h", text: "Your player price" });
+    blocks.push({
+      kind: "p",
+      text: `Because you finished the challenge, the Short Stack PLO Complete System — the strategy guide plus the full Field Kit — is ${formatPrice(player.amountCents)} for you rather than ${formatPrice(publicPrice)}. The link below holds it open; there is no countdown behind it.`,
+    });
+    blocks.push({
+      kind: "link",
+      text: `Get the Complete System — ${formatPrice(player.amountCents)}`,
+      href: options.playerPriceUrl,
+    });
+  }
+
+  blocks.push({ kind: "p", text: signature });
 
   return {
-    subject: "Your PLO Survival Card",
-    blocks: [
-      { kind: "p", text: scoreLine },
-      {
-        kind: "p",
-        text: "The NLH Player's PLO Survival Card: eight expensive Hold'em habits to drop before you sit in a PLO game. Two pages — the eight translation errors, the four street questions, and the $2/$5 60 BB numbers worth remembering.",
-      },
-      {
-        kind: "p",
-        text: "Over the next week or so I'll send you four short notes working through the ideas behind those three hands — where Hold'em instincts misfire, how to count and grade a big draw, and what a full hand looks like when you work it properly.",
-      },
-      { kind: "h", text: "Because you finished the Reality Check" },
-      {
-        kind: "p",
-        text: `The Short Stack PLO Complete System — the book, the full seven-piece Field Kit, and the 20-Hand Capstone Quiz — is ${formatPrice(promo.amountCents)} for you instead of ${formatPrice(promo.compareAtCents ?? offers.system.amountCents)}.`,
-      },
-      { kind: "p", text: signature },
-    ],
+    subject: finished
+      ? "Your challenge results and PLO Survival Card"
+      : "Your PLO Survival Card",
+    blocks,
     cta: { label: "Download the Survival Card", href: options.survivalCardUrl },
   };
 }
@@ -116,8 +178,8 @@ export const sequence: {
         { kind: "p", text: signature },
       ],
       cta: {
-        label: "Retake the Reality Check",
-        href: link("/plo-reality-check", "expensive-mistake"),
+        label: "Take the challenge again",
+        href: link("/plo-challenge", "expensive-mistake"),
       },
     },
   },
@@ -129,7 +191,7 @@ export const sequence: {
       blocks: [
         {
           kind: "p",
-          text: "Question 2 of the Reality Check is the one most people get wrong, and it is worth sitting with.",
+          text: "Hand 6 of the challenge is the one most people get wrong, and it is worth sitting with.",
         },
         {
           kind: "p",
@@ -155,7 +217,7 @@ export const sequence: {
       ],
       cta: {
         label: "See the full out count",
-        href: link("/plo-reality-check", "draw-quality"),
+        href: link("/plo-challenge", "draw-quality"),
       },
     },
   },
@@ -167,7 +229,7 @@ export const sequence: {
       blocks: [
         {
           kind: "p",
-          text: "Here is the third Reality Check hand worked through the four questions the whole system runs on: Hand · SPR · Equity · Player.",
+          text: "Here is Hand 8 of the challenge worked through the four questions the whole system runs on: Hand · SPR · Equity · Player.",
         },
         {
           kind: "p",
@@ -201,7 +263,7 @@ export const sequence: {
       ],
       cta: {
         label: "Work the hand yourself",
-        href: link("/plo-reality-check", "worked-hand"),
+        href: link("/plo-challenge", "worked-hand"),
       },
     },
   },
@@ -241,7 +303,7 @@ export const sequence: {
       ],
       cta: {
         label: "See the Complete System",
-        href: link("/short-stack-plo", "inside-the-system"),
+        href: playerPriceLink("inside-the-system"),
       },
     },
   },
@@ -249,7 +311,7 @@ export const sequence: {
     key: "offer-reminder",
     delayDays: 10,
     content: {
-      subject: "Your Reality Check price is still on",
+      subject: "Your player price is still on",
       blocks: [
         {
           kind: "p",
@@ -257,7 +319,7 @@ export const sequence: {
         },
         {
           kind: "p",
-          text: `Because you finished the Reality Check, the Complete System — book, seven-piece Field Kit, and the 20-Hand Capstone Quiz — is ${formatPrice(offers["system-quiz"].amountCents)} rather than ${formatPrice(offers.system.amountCents)}.`,
+          text: `Because you finished the challenge, the Complete System — the strategy guide plus the full Field Kit — is ${formatPrice(offers["system-quiz"].amountCents)} rather than ${formatPrice(offers.system.amountCents)}. That is your player price, and it is still open.`,
         },
         {
           kind: "p",
@@ -270,8 +332,8 @@ export const sequence: {
         { kind: "p", text: signature },
       ],
       cta: {
-        label: "Get the Complete System",
-        href: link("/short-stack-plo", "offer-reminder"),
+        label: `Get the Complete System — ${formatPrice(offers["system-quiz"].amountCents)}`,
+        href: playerPriceLink("offer-reminder"),
       },
     },
   },
@@ -327,6 +389,8 @@ export function renderHtml(content: EmailContent): string {
           return `<ul style="margin:12px 0;padding-left:20px;color:#3d3a33;">${block.items
             .map((item) => `<li style="margin:6px 0;">${escapeHtml(item)}</li>`)
             .join("")}</ul>`;
+        case "link":
+          return `<p style="margin:18px 0;"><a href="${escapeHtml(block.href)}" style="color:#8a6a1d;font-weight:700;">${escapeHtml(block.text)}</a></p>`;
         default:
           return `<p style="margin:14px 0;color:#3d3a33;">${escapeHtml(block.text)}</p>`;
       }
@@ -356,6 +420,8 @@ export function renderText(content: EmailContent): string {
           return `\n${block.text.toUpperCase()}\n`;
         case "list":
           return block.items.map((item) => `  - ${item}`).join("\n");
+        case "link":
+          return `${block.text}: ${block.href}`;
         default:
           return block.text;
       }

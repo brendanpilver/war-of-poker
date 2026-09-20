@@ -38,8 +38,8 @@ describe("content IDs", () => {
 });
 
 describe("tracked links", () => {
-  it("carries the content ID into the quiz by default", () => {
-    assert.equal(trackedLink("EPM-001"), "/plo-reality-check?src=EPM-001");
+  it("carries the content ID into the challenge by default", () => {
+    assert.equal(trackedLink("EPM-001"), "/plo-challenge?src=EPM-001");
   });
 
   it("can point at another path and record a platform", () => {
@@ -64,17 +64,29 @@ describe("series catalogue", () => {
 });
 
 describe("offers", () => {
-  it("prices the book at $29 and the system at $49", () => {
-    assert.equal(offers.book.amountCents, 2900);
-    assert.equal(offers.system.amountCents, 4900);
+  it("prices the book at $19 and the Complete System at $39", () => {
+    assert.equal(offers.book.amountCents, 1900);
+    assert.equal(offers.system.amountCents, 3900);
   });
 
-  it("defaults the quiz-completer offer to $39 against a $49 compare-at", () => {
-    assert.equal(offers["system-quiz"].amountCents, 3900);
-    assert.equal(offers["system-quiz"].compareAtCents, 4900);
+  it("defaults the challenge player price to $29 against the $39 public price", () => {
+    assert.equal(offers["system-quiz"].amountCents, 2900);
+    assert.equal(offers["system-quiz"].compareAtCents, 3900);
   });
 
-  it("marks only the quiz offer as quiz-completer-only", () => {
+  it("keeps the player price below the public one it is compared against", () => {
+    const player = offers["system-quiz"];
+    assert.ok(player.compareAtCents !== undefined);
+    assert.ok(player.amountCents < player.compareAtCents);
+    assert.equal(player.compareAtCents, offers.system.amountCents);
+  });
+
+  it("leaves the book cheaper than every route to the Complete System", () => {
+    assert.ok(offers.book.amountCents < offers["system-quiz"].amountCents);
+    assert.ok(offers["system-quiz"].amountCents < offers.system.amountCents);
+  });
+
+  it("marks only the player-price offer as challenge-completer-only", () => {
     assert.equal(offers["system-quiz"].quizCompleterOnly, true);
     assert.equal(offers.system.quizCompleterOnly, false);
     assert.equal(offers.book.quizCompleterOnly, false);
@@ -85,6 +97,11 @@ describe("offers", () => {
     assert.equal(offers.book.product, "book");
   });
 
+  it("describes the book and the system as different products", () => {
+    assert.notEqual(offers.book.description, offers.system.description);
+    assert.equal(offers.system.description, offers["system-quiz"].description);
+  });
+
   it("validates offer ids", () => {
     assert.ok(isOfferId("system-quiz"));
     assert.equal(isOfferId("free"), false);
@@ -92,8 +109,8 @@ describe("offers", () => {
   });
 
   it("formats whole dollars without cents", () => {
-    assert.equal(formatPrice(4900), "$49");
-    assert.equal(formatPrice(2900), "$29");
+    assert.equal(formatPrice(3900), "$39");
+    assert.equal(formatPrice(1900), "$19");
     assert.equal(formatPrice(3950), "$39.50");
   });
 });

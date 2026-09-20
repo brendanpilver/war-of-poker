@@ -1,68 +1,104 @@
-import { questions, totalQuestions, type ChoiceId } from "./reality-check";
+import { concepts, type ConceptId } from "./concepts";
+import { hands, totalHands, type ChoiceId } from "./hands";
 
 /**
- * Quiz scoring and result interpretation.
+ * Challenge scoring, and the diagnostic the results screen reads from.
  *
  * Pure: the same answers always produce the same result, with no storage or
- * network involved, so the funnel's most-used calculation is straightforward to
- * test. The interpretation text comments only on quiz performance -- it makes
- * no claim about the reader's game beyond these three hands.
+ * network involved, so the funnel's most-used calculation stays easy to test.
+ *
+ * The interpretation comments on these ten decisions and nothing else. It does
+ * not claim to have measured anyone's game, and no band tells a reader they
+ * need the book.
  */
 
-/** A reader's answers, keyed by question id. Absent means unanswered. */
-export type QuizAnswers = Record<string, ChoiceId>;
+/** A player's answers, keyed by hand id. Absent means unanswered. */
+export type ChallengeAnswers = Record<string, ChoiceId>;
 
-export type QuizResult = {
+export type ChallengeResult = {
   score: number;
   total: number;
-  /** Ids of the questions answered incorrectly, in question order. */
-  missedQuestionIds: string[];
+  /** Ids of the hands answered incorrectly, in hand order. */
+  missedHandIds: string[];
+  /** Concepts whose hand was answered correctly, in hand order. */
+  strongConceptIds: ConceptId[];
+  /** Concepts whose hand was missed, in hand order. */
+  watchConceptIds: ConceptId[];
   interpretation: string;
 };
 
-export function isCorrect(questionId: string, choiceId: ChoiceId | undefined): boolean {
-  const question = questions.find((entry) => entry.id === questionId);
-  return question !== undefined && question.correctChoiceId === choiceId;
+export function isCorrect(handId: string, choiceId: ChoiceId | undefined): boolean {
+  const hand = hands.find((entry) => entry.id === handId);
+  return hand !== undefined && hand.correctChoiceId === choiceId;
 }
 
 /**
- * The bands come from the source material's own closing note: missing one is
- * "interesting", missing two means Hold'em instincts are still driving.
+ * Four bands. Wording is about the decisions just made, not about the reader:
+ * a missed hand is an input that moved without the answer moving with it.
  */
 function interpret(score: number): string {
-  if (score === 3) {
-    return "Three for three. You worked through each spot rather than reaching for the Hold'em answer — which is the habit the whole system is built on.";
+  if (score >= 9) {
+    return "You were working the decisions rather than reaching for the Hold'em answer, which is the habit the whole system is built on. What the system adds from here is speed and consistency — the same lens, applied the same way, when the game is loud and the clock is running.";
   }
-  if (score === 2) {
-    return "Missing one of these is interesting. The reasoning is already mostly there; one input changed and the answer moved with it.";
+  if (score >= 7) {
+    return "Most of the reasoning is already there. The hands you missed are the ones where a single input moved and the answer should have moved with it — which is exactly what a repeatable process is for.";
   }
-  return "Missing two means your Hold'em instincts are still driving, and in PLO they drive into traffic.";
+  if (score >= 4) {
+    return "A solid core with some expensive gaps. These read less like knowledge gaps than habit gaps: a Hold'em answer arriving before the PLO question has finished being asked.";
+  }
+  return "Four hole cards genuinely change the game. Nothing here suggests you play badly — it suggests the inputs you are used to trusting are not the inputs that decide these hands. That is a fixable problem, and it is the one this system was written for.";
 }
 
-export function scoreQuiz(answers: QuizAnswers): QuizResult {
-  const missedQuestionIds = questions
-    .filter((question) => !isCorrect(question.id, answers[question.id]))
-    .map((question) => question.id);
+export function scoreChallenge(answers: ChallengeAnswers): ChallengeResult {
+  const missedHandIds: string[] = [];
+  const strongConceptIds: ConceptId[] = [];
+  const watchConceptIds: ConceptId[] = [];
 
-  const score = totalQuestions - missedQuestionIds.length;
+  for (const hand of hands) {
+    if (isCorrect(hand.id, answers[hand.id])) {
+      strongConceptIds.push(hand.concept);
+    } else {
+      missedHandIds.push(hand.id);
+      watchConceptIds.push(hand.concept);
+    }
+  }
+
+  const score = totalHands - missedHandIds.length;
 
   return {
     score,
-    total: totalQuestions,
-    missedQuestionIds,
+    total: totalHands,
+    missedHandIds,
+    strongConceptIds,
+    watchConceptIds,
     interpretation: interpret(score),
   };
 }
 
-/** The lessons attached to the questions the reader got wrong. */
-export function missedLessons(result: QuizResult): { title: string; lesson: string }[] {
-  return result.missedQuestionIds.flatMap((id) => {
-    const question = questions.find((entry) => entry.id === id);
-    return question ? [{ title: question.title, lesson: question.lesson }] : [];
+/** The principles attached to the hands the player got wrong. */
+export function missedPrinciples(
+  result: ChallengeResult,
+): { title: string; principle: string; concept: string }[] {
+  return result.missedHandIds.flatMap((id) => {
+    const hand = hands.find((entry) => entry.id === id);
+    return hand
+      ? [
+          {
+            title: hand.title,
+            principle: hand.principle,
+            concept: concepts[hand.concept].label,
+          },
+        ]
+      : [];
   });
 }
 
-/** True once every question has an answer. Gates the result screen. */
-export function isComplete(answers: QuizAnswers): boolean {
-  return questions.every((question) => answers[question.id] !== undefined);
+/** True once every hand has an answer. Gates the results screen. */
+export function isComplete(answers: ChallengeAnswers): boolean {
+  return hands.every((hand) => answers[hand.id] !== undefined);
+}
+
+/** How far through the challenge a set of answers is. */
+export function answeredCount(answers: ChallengeAnswers): number {
+  return hands.filter((hand) => answers[hand.id] !== undefined).length;
 }

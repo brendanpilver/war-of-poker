@@ -1,6 +1,11 @@
 import { TrackedCta } from "@/components/analytics/tracked-cta";
 import { formatPrice, offers } from "@/lib/offers";
-import { PRODUCT_PATH, QUIZ_PATH, shortStackPlo } from "@/lib/short-stack-plo";
+import {
+  CHALLENGE_PATH,
+  PRODUCT_PATH,
+  productPricingHref,
+  shortStackPlo,
+} from "@/lib/short-stack-plo";
 import { BookCover } from "./book-cover";
 import { BuyOfferButton } from "./buy-offer-button";
 
@@ -13,15 +18,25 @@ import { BuyOfferButton } from "./buy-offer-button";
  * live here are now further down the page — above the fold they competed with
  * the cover and the price.
  *
- * `variant` only changes the heading level and the secondary link: the sales
- * page is already the product page, so its secondary action is the quiz rather
- * than a link to itself.
+ * `variant` sets which action leads, because the two pages receive different
+ * traffic:
  *
- * The grid is three items rather than two — copy, cover, then price and button
- * — so that on one column the cover falls between the pitch and the price
- * instead of above the headline or below the button. On `lg` the cover spans
- * both rows in the right-hand column, which puts the left column back to the
- * single stack it has always been.
+ * - **home** leads with the 10-Hand Challenge. Social and content links point
+ *   at the challenge, and it sells the system better than a price does: ten
+ *   worked decisions in River Potter's voice, with the player price at the end.
+ * - **product** leads with checkout. This is the dedicated sales page, and
+ *   someone who arrives ready to buy should not have to navigate around a free
+ *   quiz to do it. The challenge follows as the alternative for a reader who
+ *   isn't ready yet.
+ *
+ * Either way buying is never gated behind the challenge: `Pricing` is high on
+ * both pages and the price sits in this block on both.
+ *
+ * The grid is three items rather than two — copy, cover, then the actions — so
+ * that on one column the cover falls between the pitch and the price instead of
+ * above the headline or below the button. On `lg` the cover spans both rows in
+ * the right-hand column, which puts the left column back to the single stack it
+ * has always been.
  *
  * That order only fits a phone because there is very little above it: the
  * headline, one byline, one line of argument. A paragraph describing the book
@@ -37,9 +52,29 @@ import { BuyOfferButton } from "./buy-offer-button";
  * product.
  */
 
+const primaryLinkClass =
+  "inline-flex w-full items-center justify-center rounded-[2px] bg-gold px-6 py-3.5 text-center font-semibold whitespace-nowrap text-ink shadow-[inset_0_-2px_0_rgb(0_0_0/0.18)] transition-colors duration-150 hover:bg-gold-light active:translate-y-px sm:w-auto";
+
+const secondaryLinkClass =
+  "inline-flex w-full items-center justify-center rounded-[2px] border border-line bg-ink-card px-6 py-3.5 text-center font-semibold whitespace-nowrap text-bone transition-colors duration-150 hover:border-bone-faint hover:bg-ink-raised active:translate-y-px sm:w-auto";
+
 export function ProductHero({ variant }: { variant: "home" | "product" }) {
   const system = offers.system;
   const book = offers.book;
+
+  const bookLine = (
+    <p className="mt-4 text-[15px] text-bone-muted">
+      Book only — {formatPrice(book.amountCents)}.{" "}
+      <TrackedCta
+        href={variant === "home" ? productPricingHref : "#pricing"}
+        location={`${variant}-hero-pricing`}
+        label="pricing"
+        className="text-bone underline decoration-bone/30 underline-offset-4 transition-colors hover:decoration-gold"
+      >
+        See both options
+      </TrackedCta>
+    </p>
+  );
 
   return (
     <section aria-labelledby="product-hero-title" className="border-b border-line">
@@ -71,50 +106,85 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
         </div>
 
         <div className="lg:col-span-7">
-          <div className="mt-5 border-t border-line pt-4 sm:mt-7 sm:pt-6">
-            <p className="flex flex-wrap items-baseline gap-x-3">
-              <span className="text-lg font-semibold text-bone">
-                Complete System
-              </span>
-              <span className="text-3xl font-bold text-bone tabular-nums">
-                {formatPrice(system.amountCents)}
-              </span>
-            </p>
-            <p className="mt-1.5 text-bone-muted">
-              Book + 7-piece Field Kit + 20-Hand Capstone
-            </p>
+          {variant === "product" ? (
+            <>
+              <div className="mt-5 border-t border-line pt-4 sm:mt-7 sm:pt-6">
+                <p className="flex flex-wrap items-baseline gap-x-3">
+                  <span className="text-lg font-semibold text-bone">
+                    Complete System
+                  </span>
+                  <span className="text-3xl font-bold text-bone tabular-nums">
+                    {formatPrice(system.amountCents)}
+                  </span>
+                </p>
+                <p className="mt-1.5 text-bone-muted">
+                  The book and the full Field Kit — learn the method, and apply it.
+                </p>
+                <BuyOfferButton
+                  offerId="system"
+                  location="product-hero"
+                  className="mt-5 w-full sm:w-auto"
+                  label={`Get the Complete System — ${formatPrice(system.amountCents)}`}
+                />
+                {bookLine}
+              </div>
 
-            <BuyOfferButton
-              offerId="system"
-              location={`${variant}-hero`}
-              className="mt-5 w-full sm:mt-6 sm:w-auto"
-              label={`Get the Complete System — ${formatPrice(system.amountCents)}`}
-            />
+              <div className="mt-6 border-t border-line pt-5 sm:mt-7 sm:pt-6">
+                <p className="text-[15px] leading-snug text-pretty text-bone-muted">
+                  Not sure yet? Ten live PLO decisions, worked, free. Finish it
+                  and your player price on the Complete System is unlocked.
+                </p>
+                <TrackedCta
+                  href={CHALLENGE_PATH}
+                  location="product-hero-secondary"
+                  label="Take the 10-Hand Challenge"
+                  className={`mt-5 ${secondaryLinkClass}`}
+                >
+                  Take the 10-Hand Challenge
+                </TrackedCta>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mt-5 border-t border-line pt-4 sm:mt-7 sm:pt-6">
+                <TrackedCta
+                  href={CHALLENGE_PATH}
+                  location="home-hero"
+                  label="Take the 10-Hand Challenge"
+                  className={primaryLinkClass}
+                >
+                  Take the 10-Hand Challenge
+                </TrackedCta>
+                <p className="mt-3 text-[15px] leading-snug text-pretty text-bone-muted">
+                  Free. Ten live PLO decisions, worked. Finish it and your player
+                  price on the Complete System is unlocked.
+                </p>
+              </div>
 
-            <p className="mt-4 text-[15px] text-bone-muted">
-              Book only — {formatPrice(book.amountCents)}.{" "}
-              <TrackedCta
-                href={variant === "home" ? PRODUCT_PATH : "#pricing"}
-                location={`${variant}-hero-secondary`}
-                label="pricing"
-                className="text-bone underline decoration-bone/30 underline-offset-4 transition-colors hover:decoration-gold"
-              >
-                See both options
-              </TrackedCta>
-            </p>
-          </div>
-
-          <p className="mt-7">
-            <TrackedCta
-              href={QUIZ_PATH}
-              location={`${variant}-hero-quiz`}
-              label="Take the free 3-Hand Reality Check"
-              className="inline-flex items-center gap-2 font-medium text-gold underline decoration-gold/40 underline-offset-[6px] transition-colors hover:decoration-gold"
-            >
-              Take the free 3-Hand Reality Check
-              <span aria-hidden>→</span>
-            </TrackedCta>
-          </p>
+              <div className="mt-6 border-t border-line pt-5 sm:mt-7 sm:pt-6">
+                <p className="flex flex-wrap items-baseline gap-x-3">
+                  <span className="text-lg font-semibold text-bone">
+                    Complete System
+                  </span>
+                  <span className="text-3xl font-bold text-bone tabular-nums">
+                    {formatPrice(system.amountCents)}
+                  </span>
+                </p>
+                <p className="mt-1.5 text-bone-muted">
+                  The book and the full Field Kit — learn the method, and apply it.
+                </p>
+                <TrackedCta
+                  href={PRODUCT_PATH}
+                  location="home-hero-secondary"
+                  label="See the Short Stack PLO System"
+                  className={`mt-5 ${secondaryLinkClass}`}
+                >
+                  See the Short Stack PLO System
+                </TrackedCta>
+                {bookLine}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

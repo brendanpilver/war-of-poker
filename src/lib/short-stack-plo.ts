@@ -16,8 +16,14 @@ export const shortStackPlo = {
 /** The sales page. Prices live in `src/lib/offers.ts`. */
 export const PRODUCT_PATH = "/short-stack-plo";
 
-/** The free acquisition asset. */
-export const QUIZ_PATH = "/plo-reality-check";
+/**
+ * The free acquisition asset, and the site's primary call to action.
+ *
+ * Short on purpose: it is read aloud in videos, printed on cards, and encoded
+ * in QR codes. `/plo-reality-check` redirects here -- see `next.config.mjs` --
+ * because published links carry the content IDs the funnel is attributed on.
+ */
+export const CHALLENGE_PATH = "/plo-challenge";
 
 /**
  * Where a "get the book" call to action goes. Checkout itself is started by

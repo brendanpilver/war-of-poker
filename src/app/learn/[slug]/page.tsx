@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { TrackedCta } from "@/components/analytics/tracked-cta";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { QuizCta } from "@/components/marketing/quiz-cta";
+import { ChallengeCta } from "@/components/marketing/challenge-cta";
 import { articles, findArticle, type ArticleSection } from "@/lib/content/articles";
 import { PRODUCT_PATH, shortStackPlo } from "@/lib/short-stack-plo";
 import { siteUrl } from "@/lib/site";
@@ -200,7 +200,7 @@ export default async function ArticlePage({ params }: PageProps<"/learn/[slug]">
           </aside>
         </article>
 
-        <QuizCta location={`article-${article.slug}`} />
+        <ChallengeCta location={`article-${article.slug}`} />
       </main>
       <SiteFooter />
     </>

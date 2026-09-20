@@ -6,7 +6,8 @@ import { BookCover } from "./book-cover";
 import { Section, SectionHeading } from "./section";
 
 /**
- * What $49 actually buys. Merges the former BookContents and SystemContents.
+ * What the Complete System actually contains. Merges the former BookContents
+ * and SystemContents.
  *
  * The Field Kit is shown as seven named cards rather than a bullet reading
  * "7-piece Field Kit", because the job of this section is to make a system look

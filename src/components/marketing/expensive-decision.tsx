@@ -1,13 +1,13 @@
 import { TrackedCta } from "@/components/analytics/tracked-cta";
 import { CardRow } from "@/components/poker/playing-card";
-import { questions } from "@/lib/quiz/reality-check";
-import { QUIZ_PATH } from "@/lib/short-stack-plo";
+import { hands, totalHands } from "@/lib/quiz/hands";
+import { CHALLENGE_PATH } from "@/lib/short-stack-plo";
 import { Section, SectionHeading } from "./section";
 
 /**
  * One real decision, worked — the page's proof mechanism.
  *
- * Uses the first Reality Check hand, which is approved published material
+ * Uses the challenge's opening hand, which is approved published material
  * rather than a constructed example. It is a $242 decision: the cost of getting
  * this one spot wrong is several times the price of the system, which is the
  * whole argument made concrete.
@@ -16,7 +16,7 @@ import { Section, SectionHeading } from "./section";
  * that the reasoning is real.
  */
 
-const [acesHand] = questions;
+const [acesHand] = hands;
 
 const framework = [
   {
@@ -100,12 +100,12 @@ export function ExpensiveDecision({ ctaLocation }: { ctaLocation: string }) {
           </dl>
 
           <TrackedCta
-            href={QUIZ_PATH}
+            href={CHALLENGE_PATH}
             location={ctaLocation}
-            label="Try the free 3-Hand Reality Check"
+            label={`Take the free ${totalHands}-Hand Challenge`}
             className="mt-9 inline-flex w-full items-center justify-center rounded-[2px] border border-gold px-6 py-3.5 text-center font-semibold whitespace-nowrap text-gold transition-colors duration-150 hover:bg-gold hover:text-ink active:translate-y-px sm:w-auto"
           >
-            Try the free 3-Hand Reality Check
+            Take the free {totalHands}-Hand Challenge
           </TrackedCta>
         </div>
       </div>

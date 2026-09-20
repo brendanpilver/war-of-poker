@@ -83,7 +83,7 @@ export function formatContentId(seriesCode: SeriesCode, n: number): string {
 /** The tracked link a published piece points at. */
 export function trackedLink(
   contentId: string,
-  path = "/plo-reality-check",
+  path = "/plo-challenge",
   platform?: string,
 ): string {
   const params = new URLSearchParams({ src: contentId });

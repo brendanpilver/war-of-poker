@@ -137,12 +137,14 @@ CONTENT -> QUIZ -> EMAIL -> PRODUCT PAGE -> PURCHASE -> DELIVERY -> ANALYTICS
 **What now exists:**
 
 - Routes: the homepage, the `/short-stack-plo` sales page, the free
-  `/plo-reality-check` quiz, `/learn`, `/river-potter`, `/thank-you`,
-  `/downloads`, and a token-gated `/growth` dashboard.
+  `/plo-challenge` 10-Hand Challenge (`/plo-reality-check` redirects to it),
+  `/learn`, `/river-potter`, `/thank-you`, `/downloads`, and a token-gated
+  `/growth` dashboard.
 - **Supabase** — subscribers, events, purchases, content pieces, email sends.
-- **Stripe Checkout** — the $29 book and the $49 Complete System, plus a
-  configurable quiz-completer offer.
-- **Resend** — the Survival Card and a six-step email sequence.
+- **Stripe Checkout** — the $19 book and the $39 Complete System, plus the $29
+  player price earned by finishing the 10-Hand Challenge.
+- **Resend** — the challenge results email (score, concepts, Survival Card,
+  player price) and the five-step sequence that follows it.
 - **First-party analytics** — content-ID attribution carried from a published
   piece through quiz, signup, and checkout onto the recorded sale.
 - **Protected delivery** — paid files behind signed, expiring tokens.

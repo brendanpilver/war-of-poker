@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { QuizCta } from "@/components/marketing/quiz-cta";
+import { ChallengeCta } from "@/components/marketing/challenge-cta";
 import { articles, plannedTopics } from "@/lib/content/articles";
 
 const title = "Learn — Live PLO strategy | War of Poker";
@@ -96,14 +96,14 @@ export default function LearnIndexPage() {
                 ))}
               </ul>
               <p className="mt-8 leading-relaxed text-pretty text-bone-muted">
-                In the meantime, the Reality Check below is the fastest way to
-                find out which PLO habits are costing you money.
+                In the meantime, the 10-Hand Challenge below is the fastest way
+                to find out which PLO habits are costing you money.
               </p>
             </section>
           )}
         </div>
 
-        <QuizCta location="learn-index" />
+        <ChallengeCta location="learn-index" />
       </main>
       <SiteFooter />
     </>

@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     question: "What do I get?",
-    answer: `Two options. The Complete System (${formatPrice(offers.system.amountCents)}) is the book plus the full seven-piece Field Kit and the 20-Hand Capstone Quiz. The book on its own is ${formatPrice(offers.book.amountCents)}. Both are digital downloads with immediate access.`,
+    answer: `Two options. Short Stack PLO on its own is ${formatPrice(offers.book.amountCents)} — the strategy guide, for learning the method. The Complete System is ${formatPrice(offers.system.amountCents)} — the same guide plus the full seven-piece Field Kit, including the 20-Hand Capstone Quiz, for applying it at the table and reviewing it afterwards. Both are digital downloads with immediate access.`,
   },
 ];
 

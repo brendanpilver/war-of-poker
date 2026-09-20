@@ -50,7 +50,7 @@ function checkoutEvent(overrides: Record<string, unknown> = {}) {
       object: {
         id: "cs_test_1",
         payment_status: "paid",
-        amount_total: 4900,
+        amount_total: 3900,
         currency: "usd",
         payment_intent: "pi_test_1",
         customer_details: { email: "buyer@example.com" },
@@ -77,7 +77,7 @@ describe("Stripe webhook signature verification", () => {
   it("rejects a valid signature over a different body", async () => {
     const { signature } = signedEvent(checkoutEvent());
     // Same signature, tampered payload: the amount has been doubled.
-    const tampered = JSON.stringify(checkoutEvent({ amount_total: 9800 }));
+    const tampered = JSON.stringify(checkoutEvent({ amount_total: 7800 }));
     const response = await POST(post(tampered, signature));
     assert.equal(response.status, 400);
   });

@@ -49,7 +49,7 @@ function Stat({
 }
 
 function Dashboard({ metrics }: { metrics: GrowthMetrics }) {
-  const { funnel, purchases, rates } = metrics;
+  const { funnel, purchases, rates, challengeOutcomes } = metrics;
 
   return (
     <>
@@ -63,22 +63,121 @@ function Dashboard({ metrics }: { metrics: GrowthMetrics }) {
         <div className="mt-5 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
           <Stat label="Page views" value={number.format(funnel.pageViews)} />
           <Stat label="Product page views" value={number.format(funnel.productViews)} />
-          <Stat label="Quiz starts" value={number.format(funnel.quizStarts)} />
+          <Stat label="Challenge starts" value={number.format(funnel.quizStarts)} />
           <Stat
-            label="Quiz completions"
+            label="Challenge completions"
             value={number.format(funnel.quizCompletions)}
             hint={`${percent.format(rates.quizCompletion)} completion rate`}
           />
           <Stat
+            label="Player price unlocked"
+            value={number.format(funnel.discountsUnlocked)}
+            hint={`${number.format(funnel.resultsViewed)} results screens viewed`}
+          />
+          <Stat
             label="Emails captured"
             value={number.format(funnel.emailsCaptured)}
-            hint={`${percent.format(rates.emailCapture)} of quiz completions`}
+            hint={`${percent.format(rates.emailCapture)} of completions · ${number.format(funnel.resultsEmailViews)} saw the form`}
           />
           <Stat
             label="Checkouts started"
             value={number.format(funnel.checkoutsStarted)}
-            hint={`${percent.format(rates.productToCheckout)} of product views`}
+            hint={`${percent.format(rates.productToCheckout)} of product views · ${percent.format(rates.resultToCheckout)} of results`}
           />
+        </div>
+      </section>
+
+      <section aria-labelledby="outcomes-title" className="mt-12">
+        <h2
+          id="outcomes-title"
+          className="font-mono text-[11px] tracking-[0.18em] text-gold uppercase"
+        >
+          What challenge completers did
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm text-bone-muted">
+          Completions count runs, not people, so treat these as a shape rather
+          than a census. Buyers are paid player-price sales; retained leads are
+          subscribers whose address came from the results screen. Anonymous
+          exits are what is left.
+        </p>
+        <div className="mt-5 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+          <Stat
+            label="Completions"
+            value={number.format(challengeOutcomes.completions)}
+          />
+          <Stat
+            label="Bought at the player price"
+            value={number.format(challengeOutcomes.playerPricePurchases)}
+            hint={`${number.format(challengeOutcomes.immediateBuyers)} without leaving an address · ${number.format(challengeOutcomes.retainedThenBought)} after`}
+          />
+          <Stat
+            label="Retained, not yet buying"
+            value={number.format(challengeOutcomes.retainedNonBuyers)}
+            hint="Gave an address on the results screen"
+          />
+          <Stat
+            label="Anonymous exits"
+            value={number.format(challengeOutcomes.anonymousExits)}
+            hint="Finished, then left without either"
+          />
+        </div>
+      </section>
+
+      <section aria-labelledby="hands-title" className="mt-12">
+        <h2
+          id="hands-title"
+          className="font-mono text-[11px] tracking-[0.18em] text-gold uppercase"
+        >
+          Where the challenge loses people
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm text-bone-muted">
+          Reached is how many times a hand was shown; answered is how many of
+          those produced an answer. The gap between one hand&apos;s reached and
+          the next hand&apos;s is where the drop-off is.
+        </p>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[34rem] border-collapse text-sm">
+            <thead>
+              <tr className="border-y border-line text-left">
+                <th className="py-3 pr-4 font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
+                  Hand
+                </th>
+                <th className="py-3 pr-4 font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
+                  Concept
+                </th>
+                <th className="py-3 pr-4 text-right font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
+                  Reached
+                </th>
+                <th className="py-3 pr-4 text-right font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
+                  Answered
+                </th>
+                <th className="py-3 text-right font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
+                  Missed
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {metrics.challengeHands.map((row) => (
+                <tr key={row.handId} className="border-b border-line/60">
+                  <td className="py-3 pr-4 font-mono text-bone tabular-nums">
+                    {row.number}
+                  </td>
+                  <td className="py-3 pr-4 text-bone-muted">{row.concept}</td>
+                  <td className="py-3 pr-4 text-right text-bone tabular-nums">
+                    {number.format(row.reached)}
+                  </td>
+                  <td className="py-3 pr-4 text-right text-bone-muted tabular-nums">
+                    {number.format(row.answered)}
+                  </td>
+                  <td className="py-3 text-right text-gold tabular-nums">
+                    {row.answered > 0
+                      ? `${number.format(row.missed)} · ${percent.format(row.missed / row.answered)}`
+                      : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -113,7 +212,7 @@ function Dashboard({ metrics }: { metrics: GrowthMetrics }) {
             return (
               <Stat
                 key={offerId}
-                label={`${offer.name} · ${formatPrice(offer.amountCents)}${offer.quizCompleterOnly ? " (quiz)" : ""}`}
+                label={`${offer.name} · ${formatPrice(offer.amountCents)}${offer.quizCompleterOnly ? " (player price)" : ""}`}
                 value={number.format(entry.count)}
                 hint={formatPrice(entry.revenueCents)}
               />
@@ -145,7 +244,7 @@ function Dashboard({ metrics }: { metrics: GrowthMetrics }) {
                     Content ID
                   </th>
                   <th className="py-3 pr-4 text-right font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
-                    Quiz starts
+                    Challenge starts
                   </th>
                   <th className="py-3 pr-4 text-right font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
                     Purchases

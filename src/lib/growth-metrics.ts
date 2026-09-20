@@ -1,4 +1,5 @@
 import { offers, type OfferId } from "./offers";
+import { hands } from "./quiz/hands";
 import { supabaseAdmin } from "./supabase";
 
 /**
@@ -17,14 +18,51 @@ export type FunnelCounts = {
   productViews: number;
   quizStarts: number;
   quizCompletions: number;
+  resultsViewed: number;
+  discountsUnlocked: number;
+  resultsEmailViews: number;
   emailsCaptured: number;
   checkoutsStarted: number;
+};
+
+/**
+ * What happened to the people who finished the challenge: the funnel's real
+ * question, split three ways.
+ *
+ * `completions` counts `quiz_completed` events rather than people -- one player
+ * who takes the challenge twice completes twice -- so the three outcomes below
+ * are a shape, not a census. The outcomes themselves are counted from rows:
+ * a paid `system-quiz` purchase, or a subscriber whose source was the
+ * challenge. `anonymousExits` is what is left over.
+ */
+export type ChallengeOutcomes = {
+  completions: number;
+  /** Paid `system-quiz` sales: every purchase made at the earned price. */
+  playerPricePurchases: number;
+  /** Bought at the player price without ever leaving an address. */
+  immediateBuyers: number;
+  /** Left an address and bought afterwards. */
+  retainedThenBought: number;
+  /** Left an address and has not bought. */
+  retainedNonBuyers: number;
+  /** Finished, then left without buying or subscribing. */
+  anonymousExits: number;
 };
 
 export type PurchaseTotals = {
   count: number;
   revenueCents: number;
   byOffer: Record<OfferId, { count: number; revenueCents: number }>;
+};
+
+/** One hand of the challenge, as the funnel sees it. */
+export type ChallengeHandRow = {
+  handId: string;
+  number: number;
+  concept: string;
+  reached: number;
+  answered: number;
+  missed: number;
 };
 
 export type SourceRow = {
@@ -37,10 +75,14 @@ export type SourceRow = {
 export type GrowthMetrics = {
   since: string;
   funnel: FunnelCounts;
+  challengeOutcomes: ChallengeOutcomes;
+  /** Per-hand reach, answers and misses, so abandonment has a shape. */
+  challengeHands: ChallengeHandRow[];
   purchases: PurchaseTotals;
   rates: {
     quizCompletion: number;
     emailCapture: number;
+    resultToCheckout: number;
     productToCheckout: number;
     checkoutToPurchase: number;
     visitorToCustomer: number;
@@ -79,7 +121,13 @@ export async function loadGrowthMetrics(days = 30): Promise<GrowthMetrics | null
 
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-  const [eventsResult, purchasesResult, subscribersResult] = await Promise.all([
+  const [
+    eventsResult,
+    purchasesResult,
+    subscribersResult,
+    challengeLeadsResult,
+    challengeCustomersResult,
+  ] = await Promise.all([
     db
       .from("events")
       .select("name, content_id, utm_source, props")
@@ -93,6 +141,20 @@ export async function loadGrowthMetrics(days = 30): Promise<GrowthMetrics | null
     db
       .from("subscribers")
       .select("id", { count: "exact", head: true })
+      .gte("created_at", since),
+    // `source` is written on insert only, so it still names the form that
+    // captured the address however many times the row is later updated.
+    db
+      .from("subscribers")
+      .select("id", { count: "exact", head: true })
+      .eq("source", "challenge")
+      .eq("customer_status", "lead")
+      .gte("created_at", since),
+    db
+      .from("subscribers")
+      .select("id", { count: "exact", head: true })
+      .eq("source", "challenge")
+      .eq("customer_status", "customer")
       .gte("created_at", since),
   ]);
 
@@ -111,6 +173,9 @@ export async function loadGrowthMetrics(days = 30): Promise<GrowthMetrics | null
     productViews: countOf("product_viewed"),
     quizStarts: countOf("quiz_started"),
     quizCompletions: countOf("quiz_completed"),
+    resultsViewed: countOf("quiz_results_viewed"),
+    discountsUnlocked: countOf("quiz_discount_unlocked"),
+    resultsEmailViews: countOf("results_email_viewed"),
     // Subscriber rows rather than events: one person submitting twice is one
     // captured email.
     emailsCaptured: subscribersResult.count ?? 0,
@@ -133,6 +198,52 @@ export async function loadGrowthMetrics(days = 30): Promise<GrowthMetrics | null
     if (!(offerId in offers)) continue;
     purchases.byOffer[offerId].count += 1;
     purchases.byOffer[offerId].revenueCents += row.amount_cents;
+  }
+
+  const retainedNonBuyers = challengeLeadsResult.count ?? 0;
+  const retainedThenBought = challengeCustomersResult.count ?? 0;
+  const playerPricePurchases = purchases.byOffer["system-quiz"].count;
+
+  const challengeOutcomes: ChallengeOutcomes = {
+    completions: funnel.quizCompletions,
+    playerPricePurchases,
+    immediateBuyers: Math.max(0, playerPricePurchases - retainedThenBought),
+    retainedThenBought,
+    retainedNonBuyers,
+    anonymousExits: Math.max(
+      0,
+      funnel.quizCompletions - playerPricePurchases - retainedNonBuyers,
+    ),
+  };
+
+  // Per-hand funnel. `reached` and `answered` come from the two events the
+  // challenge emits per hand, and `missed` from the `correct` flag on the
+  // answer -- which is what makes "which hand loses people" answerable.
+  const challengeHands: ChallengeHandRow[] = hands.map((hand) => ({
+    handId: hand.id,
+    number: hand.number,
+    concept: hand.concept,
+    reached: 0,
+    answered: 0,
+    missed: 0,
+  }));
+  const byHandId = new Map(challengeHands.map((row) => [row.handId, row]));
+
+  for (const event of events) {
+    if (event.name !== "quiz_question_viewed" && event.name !== "quiz_question_answered") {
+      continue;
+    }
+    const handId = event.props?.hand_id;
+    if (typeof handId !== "string") continue;
+    const row = byHandId.get(handId);
+    if (!row) continue;
+
+    if (event.name === "quiz_question_viewed") {
+      row.reached += 1;
+    } else {
+      row.answered += 1;
+      if (event.props?.correct === false) row.missed += 1;
+    }
   }
 
   // Attribution by content ID: quiz starts from events, sales from purchases.
@@ -175,10 +286,13 @@ export async function loadGrowthMetrics(days = 30): Promise<GrowthMetrics | null
   return {
     since,
     funnel,
+    challengeOutcomes,
+    challengeHands,
     purchases,
     rates: {
       quizCompletion: rate(funnel.quizCompletions, funnel.quizStarts),
       emailCapture: rate(funnel.emailsCaptured, funnel.quizCompletions),
+      resultToCheckout: rate(funnel.checkoutsStarted, funnel.resultsViewed),
       productToCheckout: rate(funnel.checkoutsStarted, funnel.productViews),
       checkoutToPurchase: rate(purchases.count, funnel.checkoutsStarted),
       visitorToCustomer: rate(purchases.count, funnel.pageViews),

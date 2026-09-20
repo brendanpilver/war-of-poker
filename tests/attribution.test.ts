@@ -10,10 +10,10 @@ import {
 describe("parseAttribution", () => {
   it("reads the content ID from ?src", () => {
     const result = parseAttribution(
-      "https://warofpoker.com/plo-reality-check?src=EPM-001",
+      "https://warofpoker.com/plo-challenge?src=EPM-001",
     );
     assert.equal(result.src, "EPM-001");
-    assert.equal(result.landingPage, "/plo-reality-check");
+    assert.equal(result.landingPage, "/plo-challenge");
   });
 
   it("accepts ?content_id as an alias for ?src", () => {

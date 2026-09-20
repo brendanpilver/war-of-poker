@@ -62,8 +62,8 @@ describe("parseText", () => {
 describe("parseEventProps", () => {
   it("keeps scalar values", () => {
     assert.deepEqual(
-      parseEventProps({ offer: "system", price: 4900, promo: true, note: null }),
-      { offer: "system", price: 4900, promo: true, note: null },
+      parseEventProps({ offer: "system", price: 3900, promo: true, note: null }),
+      { offer: "system", price: 3900, promo: true, note: null },
     );
   });
 

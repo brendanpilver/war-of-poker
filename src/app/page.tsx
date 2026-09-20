@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { ProductViewed } from "@/components/analytics/product-viewed";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ChallengeCta } from "@/components/marketing/challenge-cta";
 import { ExpensiveDecision } from "@/components/marketing/expensive-decision";
 import { FrameworkStrip } from "@/components/marketing/framework-strip";
 import { InsideTheBook } from "@/components/marketing/inside-the-book";
 import { Pricing } from "@/components/marketing/pricing";
 import { ProductHero } from "@/components/marketing/product-hero";
-import { QuizCta } from "@/components/marketing/quiz-cta";
 import { Section } from "@/components/marketing/section";
 import { WhatYouGet } from "@/components/marketing/what-you-get";
 import { offers } from "@/lib/offers";
@@ -21,7 +21,7 @@ import { siteUrl } from "@/lib/site";
  * platform roadmap — WARPLAN, courses, tools, gear — which asked a cold visitor
  * to care about the company before the product. Five sections now: the product,
  * one real decision, what you get, the framework, and the choice between the
- * free quiz and buying. The brand lives in the header and footer.
+ * free challenge and buying. The brand lives in the header and footer.
  */
 
 const title = "Short Stack PLO — Live Pot-Limit Omaha strategy | War of Poker";
@@ -86,7 +86,7 @@ export default function Home() {
         <Section size="compact" aria-labelledby="home-framework-title">
           <FrameworkStrip headingId="home-framework-title" />
         </Section>
-        <QuizCta location="home-quiz" />
+        <ChallengeCta location="home-challenge" />
         <Pricing />
       </main>
 

@@ -1,20 +1,30 @@
+import { Suspense } from "react";
 import { fieldKitCount } from "@/lib/field-kit";
 import { formatPrice, offers } from "@/lib/offers";
 import { shortStackPlo } from "@/lib/short-stack-plo";
 import { BuyOfferButton } from "./buy-offer-button";
+import { PlayerPriceNotice } from "./player-price-notice";
 import { Section, SectionHeading } from "./section";
 
 /**
  * The two offers.
+ *
+ * They are sold as two different products, not as a book and a priced add-on:
+ * the book teaches the method, the Complete System teaches it and hands you the
+ * tools for applying it. Nothing here breaks the system's price into parts or
+ * quotes a value for the Field Kit — the $39 is what the package costs, and the
+ * difference between the two columns is what it does.
  *
  * The Complete System is visually preferred — wider column, gold rule, primary
  * button — because it is the offer the business wants chosen. It is not a dark
  * pattern: Book Only is a full, plainly described choice with its own real
  * button and its own price, there is no countdown, and no scarcity is implied.
  *
- * The quiz-completer price is not shown here. It is unlocked by finishing the
- * Reality Check and appears on the result screen, so advertising it on the
- * sales page would undercut the thing it rewards.
+ * The player price is not advertised here. It is earned by finishing the
+ * 10-Hand Challenge and appears on its results screen, so showing it to every
+ * visitor would undercut the thing it rewards. `PlayerPriceNotice` is the one
+ * exception: a completer who asked for their results by email arrives back
+ * through a link carrying `?offer=player`, and it renders for them only.
  */
 
 export const PRICING_SECTION_ID = "pricing";
@@ -40,6 +50,10 @@ export function Pricing() {
       tone="raised"
       aria-labelledby="pricing-title"
     >
+      <Suspense fallback={null}>
+        <PlayerPriceNotice />
+      </Suspense>
+
       <SectionHeading id="pricing-title" eyebrow="Pricing">
         Two ways in.
       </SectionHeading>
@@ -47,13 +61,16 @@ export function Pricing() {
       <div className="mt-10 grid items-start gap-6 lg:grid-cols-12">
         <div className="border-t-2 border-gold bg-ink-card p-6 sm:p-8 lg:col-span-7">
           <p className="font-mono text-[11px] tracking-[0.18em] text-gold uppercase">
-            Everything
+            Learn it and apply it
           </p>
           <h3 className="mt-3 text-2xl font-bold text-bone uppercase sm:text-3xl">
             Complete System
           </h3>
           <p className="mt-5 text-5xl font-bold text-bone tabular-nums">
             {formatPrice(system.amountCents)}
+          </p>
+          <p className="mt-3 max-w-md leading-snug text-pretty text-bone-muted">
+            {system.description}
           </p>
 
           <ul className="mt-6 space-y-2.5">
@@ -80,13 +97,16 @@ export function Pricing() {
 
         <div className="border-t border-line bg-ink-card p-6 sm:p-8 lg:col-span-5">
           <p className="font-mono text-[11px] tracking-[0.18em] text-bone-faint uppercase">
-            The book on its own
+            Learn the method
           </p>
           <h3 className="mt-3 text-2xl font-bold text-bone uppercase">
             Book Only
           </h3>
           <p className="mt-5 text-4xl font-bold text-bone tabular-nums">
             {formatPrice(book.amountCents)}
+          </p>
+          <p className="mt-3 leading-snug text-pretty text-bone-muted">
+            {book.description}
           </p>
 
           <ul className="mt-6 space-y-2.5">
