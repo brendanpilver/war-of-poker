@@ -24,7 +24,7 @@ Everything below serves that.
 
 | Route | Purpose |
 | ----- | ------- |
-| `/` | War of Poker homepage. Primary CTA is the challenge; the offer sits under it. |
+| `/` | War of Poker homepage. Leads with checkout, same order as `Pricing`: $39 Complete System, then the challenge to earn $29, then the $19 book. |
 | `/short-stack-plo` | The sales page. Primary CTA is checkout: $39 Complete System dominant, $19 book secondary, the challenge offered underneath as the way in for a reader who isn't ready. `?offer=player` shows the earned price. |
 | `/plo-challenge` | The free 10-Hand Short Stack PLO Challenge. **The primary acquisition asset.** |
 | `/plo-reality-check` | Permanent redirect to `/plo-challenge`, query string preserved (`next.config.mjs`). |
@@ -78,14 +78,24 @@ A published piece links to `/plo-challenge?src=EPM-001`. From there:
 ## The 10-Hand Challenge
 
 `/plo-challenge` replaced the 3-Hand PLO Reality Check as the primary
-acquisition asset. Content and social links point at it, it leads the homepage
-hero, and it is the CTA in `ChallengeCta` and `ExpensiveDecision`.
+acquisition asset. Content and social links point at it, and it is the CTA in
+`ChallengeCta` and `ExpensiveDecision`.
 
-**The sales page is the exception.** `/short-stack-plo` receives high-intent
-traffic that is already ready to buy, so its hero leads with checkout and
-offers the challenge underneath, for the reader who isn't. Buying is never
-gated behind the challenge anywhere: `Pricing` is high on both pages, and the
-results screen puts the buy button ahead of the email form.
+**Both heroes now lead with checkout.** The homepage originally led with the
+challenge and kept the offer underneath; it was reversed under explicit
+direction, so `/` and `/short-stack-plo` present the same three steps in the
+same order — the Complete System at $39, the challenge as the way to earn $29,
+then the $19 book. Social and content traffic still lands on `/plo-challenge`
+directly, which is where most of it goes.
+
+The trade is deliberate and worth restating: a visitor who was ready to pay $39
+now sees the cheaper route on the same screen and may take it. What they cannot
+do is buy at $29 without finishing — the middle column and the hero's second
+step both send them to the challenge, and only `PlayerPriceNotice` and the
+results screen carry a buy button at that price.
+
+Buying is never gated behind the challenge anywhere: `Pricing` is high on both
+pages, and the results screen puts the buy button ahead of the email form.
 
 ### Nothing on the results screen is gated
 
@@ -266,14 +276,13 @@ code, a sale or a struck-through number. Its effect is that a challenge
 completer gets the whole system for $10 more than the standalone book — which is
 the acquisition offer, not a claim about what the Field Kit is worth.
 
-**The number is public.** `Pricing` names $29 as a third way in, and both hero
-variants and `ChallengeCta` state it in figures rather than promising that "your
-player price is unlocked" — which told a first-time reader nothing and so gave
-them no reason to start. Naming it makes the challenge worth ten minutes instead
-of worth skipping. The trade is deliberate and worth restating: a visitor who
-was ready to pay $39 can now see the cheaper route and take it. What they cannot
-do is buy at $29 from that card — it sells the challenge, and only
-`PlayerPriceNotice` and the results screen carry a buy button at that price.
+**The number is public.** `Pricing` gives $29 a column of its own, equal in size
+to the other two and second in reading order, and both heroes and `ChallengeCta`
+state it in figures rather than promising that "your player price is unlocked" —
+which told a first-time reader nothing and so gave them no reason to start.
+Naming it makes the challenge worth taking instead of worth skipping. None of
+those surfaces sells at $29: each one's call to action is the challenge. See
+§ The 10-Hand Challenge for the trade that comes with it.
 
 `system-quiz` is a separate offer rather than a discount on `system` so
 reporting can distinguish an earned sale from a full-price one, and so the

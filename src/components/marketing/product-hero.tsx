@@ -1,8 +1,8 @@
 import { TrackedCta } from "@/components/analytics/tracked-cta";
 import { formatPrice, offers } from "@/lib/offers";
+import { totalHands } from "@/lib/quiz/hands";
 import {
   CHALLENGE_PATH,
-  PRODUCT_PATH,
   productPricingHref,
   shortStackPlo,
 } from "@/lib/short-stack-plo";
@@ -18,22 +18,19 @@ import { BuyOfferButton } from "./buy-offer-button";
  * live here are now further down the page — above the fold they competed with
  * the cover and the price.
  *
- * `variant` sets which action leads, because the two pages receive different
- * traffic:
+ * **Both pages now lead with checkout**, in the same order as `Pricing`: the
+ * Complete System at its public price, then the challenge as the way to earn
+ * the player price, then the book. The homepage used to lead with the challenge
+ * and hold the offer underneath; that was reversed under explicit direction, so
+ * the page a visitor lands on states the price first whichever one it is.
  *
- * - **home** leads with the 10-Hand Challenge. Social and content links point
- *   at the challenge, and it sells the system better than a price does: ten
- *   worked decisions in River Potter's voice, with the player price at the end.
- *   Both variants name that price in figures. "Your player price is unlocked"
- *   told a first-time visitor nothing -- the reward has to be a number before
- *   it can be a reason to start.
- * - **product** leads with checkout. This is the dedicated sales page, and
- *   someone who arrives ready to buy should not have to navigate around a free
- *   quiz to do it. The challenge follows as the alternative for a reader who
- *   isn't ready yet.
+ * The middle step is not a second checkout. Its call to action is the
+ * challenge, because $29 is earned by finishing it — a buy button at that price
+ * for every visitor would retire the thing it rewards. See `Pricing`.
  *
- * Either way buying is never gated behind the challenge: `Pricing` is high on
- * both pages and the price sits in this block on both.
+ * `variant` no longer changes the layout, only where the pricing link points
+ * and how each placement is named in reporting: the sales page links to its own
+ * pricing block, the homepage to the sales page's.
  *
  * The grid is three items rather than two — copy, cover, then the actions — so
  * that on one column the cover falls between the pitch and the price instead of
@@ -55,30 +52,10 @@ import { BuyOfferButton } from "./buy-offer-button";
  * product.
  */
 
-const primaryLinkClass =
-  "inline-flex w-full items-center justify-center rounded-[2px] bg-gold px-6 py-3.5 text-center font-semibold whitespace-nowrap text-ink shadow-[inset_0_-2px_0_rgb(0_0_0/0.18)] transition-colors duration-150 hover:bg-gold-light active:translate-y-px sm:w-auto";
-
-const secondaryLinkClass =
-  "inline-flex w-full items-center justify-center rounded-[2px] border border-line bg-ink-card px-6 py-3.5 text-center font-semibold whitespace-nowrap text-bone transition-colors duration-150 hover:border-bone-faint hover:bg-ink-raised active:translate-y-px sm:w-auto";
-
 export function ProductHero({ variant }: { variant: "home" | "product" }) {
   const system = offers.system;
   const book = offers.book;
   const player = offers["system-quiz"];
-
-  const bookLine = (
-    <p className="mt-4 text-[15px] text-bone-muted">
-      Book only — {formatPrice(book.amountCents)}.{" "}
-      <TrackedCta
-        href={variant === "home" ? productPricingHref : "#pricing"}
-        location={`${variant}-hero-pricing`}
-        label="pricing"
-        className="text-bone underline decoration-bone/30 underline-offset-4 transition-colors hover:decoration-gold"
-      >
-        See both options
-      </TrackedCta>
-    </p>
-  );
 
   return (
     <section aria-labelledby="product-hero-title" className="border-b border-line">
@@ -110,93 +87,61 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
         </div>
 
         <div className="lg:col-span-7">
-          {variant === "product" ? (
-            <>
-              <div className="mt-5 border-t border-line pt-4 sm:mt-7 sm:pt-6">
-                <p className="flex flex-wrap items-baseline gap-x-3">
-                  <span className="text-lg font-semibold text-bone">
-                    Complete System
-                  </span>
-                  <span className="text-3xl font-bold text-bone tabular-nums">
-                    {formatPrice(system.amountCents)}
-                  </span>
-                </p>
-                <p className="mt-1.5 text-bone-muted">
-                  The book and the full Field Kit — learn the method, and apply it.
-                </p>
-                <BuyOfferButton
-                  offerId="system"
-                  location="product-hero"
-                  className="mt-5 w-full sm:w-auto"
-                  label={`Get the Complete System — ${formatPrice(system.amountCents)}`}
-                />
-                {bookLine}
-              </div>
+          <div className="mt-5 border-t border-line pt-4 sm:mt-7 sm:pt-6">
+            <p className="flex flex-wrap items-baseline gap-x-3">
+              <span className="text-lg font-semibold text-bone">
+                Complete System
+              </span>
+              <span className="text-3xl font-bold text-bone tabular-nums">
+                {formatPrice(system.amountCents)}
+              </span>
+            </p>
+            <p className="mt-1.5 text-bone-muted">
+              The book and the full Field Kit — learn the method, and apply it.
+            </p>
+            <BuyOfferButton
+              offerId="system"
+              location={`${variant}-hero`}
+              className="mt-5 w-full sm:w-auto"
+              label={`Get the Complete System — ${formatPrice(system.amountCents)}`}
+            />
+          </div>
 
-              <div className="mt-6 border-t border-line pt-5 sm:mt-7 sm:pt-6">
-                <p className="text-[15px] leading-snug text-pretty text-bone-muted">
-                  Not sure yet? Ten live PLO decisions, worked, free. Finish it
-                  and your player price on the Complete System is{" "}
-                  <span className="font-semibold text-bone">
-                    {formatPrice(player.amountCents)}
-                  </span>{" "}
-                  instead of {formatPrice(system.amountCents)}.
-                </p>
-                <TrackedCta
-                  href={CHALLENGE_PATH}
-                  location="product-hero-secondary"
-                  label="Take the 10-Hand Challenge"
-                  className={`mt-5 ${secondaryLinkClass}`}
-                >
-                  Take the 10-Hand Challenge
-                </TrackedCta>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="mt-5 border-t border-line pt-4 sm:mt-7 sm:pt-6">
-                <TrackedCta
-                  href={CHALLENGE_PATH}
-                  location="home-hero"
-                  label="Take the 10-Hand Challenge"
-                  className={primaryLinkClass}
-                >
-                  Take the 10-Hand Challenge
-                </TrackedCta>
-                <p className="mt-3 text-[15px] leading-snug text-pretty text-bone-muted">
-                  Free. Ten live PLO decisions, worked. Finish it and your player
-                  price on the Complete System is{" "}
-                  <span className="font-semibold text-bone">
-                    {formatPrice(player.amountCents)}
-                  </span>{" "}
-                  instead of {formatPrice(system.amountCents)}.
-                </p>
-              </div>
+          <div className="mt-6 border-t border-line pt-5 sm:mt-7 sm:pt-6">
+            <p className="flex flex-wrap items-baseline gap-x-3">
+              <span className="text-lg font-semibold text-bone">
+                Or earn your player price
+              </span>
+              <span className="text-3xl font-bold text-bone tabular-nums">
+                {formatPrice(player.amountCents)}
+              </span>
+            </p>
+            <p className="mt-1.5 text-bone-muted">
+              Finish the free {totalHands}-Hand Challenge and the same Complete
+              System is {formatPrice(player.amountCents)} instead of{" "}
+              {formatPrice(system.amountCents)}.
+            </p>
+            <TrackedCta
+              href={CHALLENGE_PATH}
+              location={`${variant}-hero-challenge`}
+              label={`Take the ${totalHands}-Hand Challenge`}
+              className="mt-5 inline-flex w-full items-center justify-center rounded-[2px] border border-gold px-6 py-3.5 text-center font-semibold whitespace-nowrap text-gold transition-colors duration-150 hover:bg-gold hover:text-ink active:translate-y-px sm:w-auto"
+            >
+              Take the {totalHands}-Hand Challenge
+            </TrackedCta>
+          </div>
 
-              <div className="mt-6 border-t border-line pt-5 sm:mt-7 sm:pt-6">
-                <p className="flex flex-wrap items-baseline gap-x-3">
-                  <span className="text-lg font-semibold text-bone">
-                    Complete System
-                  </span>
-                  <span className="text-3xl font-bold text-bone tabular-nums">
-                    {formatPrice(system.amountCents)}
-                  </span>
-                </p>
-                <p className="mt-1.5 text-bone-muted">
-                  The book and the full Field Kit — learn the method, and apply it.
-                </p>
-                <TrackedCta
-                  href={PRODUCT_PATH}
-                  location="home-hero-secondary"
-                  label="See the Short Stack PLO System"
-                  className={`mt-5 ${secondaryLinkClass}`}
-                >
-                  See the Short Stack PLO System
-                </TrackedCta>
-                {bookLine}
-              </div>
-            </>
-          )}
+          <p className="mt-6 border-t border-line pt-5 text-[15px] text-bone-muted sm:mt-7 sm:pt-6">
+            Book only — {formatPrice(book.amountCents)}.{" "}
+            <TrackedCta
+              href={variant === "home" ? productPricingHref : "#pricing"}
+              location={`${variant}-hero-pricing`}
+              label="pricing"
+              className="text-bone underline decoration-bone/30 underline-offset-4 transition-colors hover:decoration-gold"
+            >
+              See all three options
+            </TrackedCta>
+          </p>
         </div>
       </div>
     </section>
