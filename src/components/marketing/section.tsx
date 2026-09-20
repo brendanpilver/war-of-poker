@@ -38,8 +38,11 @@ export function Section({
     size === "compact" ? "py-12 sm:py-14" : "py-16 sm:py-20 lg:py-24";
   const ground = tone === "raised" ? "border-y border-line bg-ink-raised" : "";
 
+  // No `scroll-mt` here: the anchor offset lives on `html` in globals.css as
+  // `scroll-padding-top`, and a margin here would add to it rather than
+  // replace it.
   return (
-    <section id={id} className={`scroll-mt-20 ${ground} ${className}`} {...rest}>
+    <section id={id} className={`${ground} ${className}`} {...rest}>
       <div className={`mx-auto max-w-5xl px-5 sm:px-8 ${padding}`}>{children}</div>
     </section>
   );

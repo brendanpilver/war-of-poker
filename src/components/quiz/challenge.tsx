@@ -209,7 +209,7 @@ export function Challenge() {
   }
 
   return (
-    <div ref={headingRef} className="scroll-mt-[5.75rem] md:scroll-mt-20">
+    <div ref={headingRef}>
       {canResume && saved && (
         <div className="mb-7 flex flex-col gap-4 border border-line bg-ink-card p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <p className="text-[15px] leading-snug text-pretty text-bone">

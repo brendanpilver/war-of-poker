@@ -64,7 +64,7 @@ function Section({ section }: { section: ArticleSection }) {
       return (
         <h2
           id={section.id}
-          className="mt-12 scroll-mt-24 text-2xl leading-snug font-semibold text-pretty text-bone sm:text-3xl"
+          className="mt-12 text-2xl leading-snug font-semibold text-pretty text-bone sm:text-3xl"
         >
           {section.text}
         </h2>

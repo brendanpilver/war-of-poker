@@ -28,7 +28,21 @@
 @layer base {
   html {
     color-scheme: dark;
-    scroll-padding-top: 5rem;
+    /* How far an anchor target sits below the top of the screen. This is the
+       only place that offset is set. A `scroll-mt-*` on the target itself does
+       not override it -- the two add up, which is what used to land every
+       anchor 160px down against a 65px header, a section too high.
+
+       The header carries a second row of nav links below `md`, so it is 98px
+       on a phone against 65px above. Each value clears its own header with
+       room to breathe. Change the header's height and these change with it. */
+    scroll-padding-top: 7rem;
+  }
+
+  @media (min-width: 768px) {
+    html {
+      scroll-padding-top: 5rem;
+    }
   }
 
   body {
