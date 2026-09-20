@@ -110,7 +110,7 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
           <div className="mt-6 border-t border-line pt-5 sm:mt-7 sm:pt-6">
             <p className="flex flex-wrap items-baseline gap-x-3">
               <span className="text-lg font-semibold text-bone">
-                Or earn your player price
+                Or Earn your Player Price
               </span>
               <span className="text-3xl font-bold text-bone tabular-nums">
                 {formatPrice(player.amountCents)}
