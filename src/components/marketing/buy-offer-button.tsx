@@ -88,19 +88,29 @@ export function BuyOfferButton({
       : "border border-line bg-ink-card text-bone hover:border-bone-faint hover:bg-ink-raised";
 
   return (
-    <span className="inline-flex flex-col items-stretch">
+    // `relative` so the error can be taken out of flow below. A transparent
+    // border keeps this the same height as an outlined call to action, which is
+    // what lets a row of mixed buttons line up on the same baseline.
+    <span className="relative inline-flex flex-col items-stretch">
       <button
         type="button"
         onClick={startCheckout}
         disabled={pending}
-        className={`inline-flex items-center justify-center rounded-[2px] px-6 py-3.5 text-center font-semibold whitespace-nowrap transition-colors duration-150 active:translate-y-px disabled:opacity-60 ${styles} ${className}`}
+        className={`inline-flex items-center justify-center rounded-[2px] border border-transparent px-6 py-3.5 text-center font-semibold whitespace-nowrap transition-colors duration-150 active:translate-y-px disabled:opacity-60 ${styles} ${className}`}
       >
         {pending
           ? "Opening checkout…"
           : (label ?? `Get the ${offer.name} — ${formatPrice(offer.amountCents)}`)}
       </button>
+      {/* Positioned rather than stacked: in a pricing row this button is
+          anchored to the bottom of its column, so an error appearing in flow
+          would shove it upward and break the row's alignment just as the
+          reader is trying to buy. */}
       {error && (
-        <span aria-live="polite" className="mt-2.5 text-sm text-gold">
+        <span
+          aria-live="polite"
+          className="absolute top-full right-0 left-0 mt-2.5 text-sm text-gold"
+        >
           {error}
         </span>
       )}

@@ -156,7 +156,10 @@ export function Pricing() {
               offerId="system"
               location="pricing"
               className="w-full"
-              label={`Get the Complete System — ${formatPrice(system.amountCents)}`}
+              // "Get the Complete System — $39" is wider than this column: the
+              // button does not wrap, so the longest label a card can hold is
+              // the product and its price.
+              label={`Complete System — ${formatPrice(system.amountCents)}`}
             />
           }
         />
