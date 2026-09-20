@@ -143,9 +143,9 @@ export function WhatYouGet({ compact = false }: { compact?: boolean }) {
       <SectionHeading
         id="what-you-get-title"
         eyebrow="What you get"
-        lead="A book you read once and seven tools you keep using. The Field Kit is printable, because at a live table you have thirty seconds and no software."
+        lead="Use the seven printable tools for study, session preparation, and hand review."
       >
-        A system you can put on the table.
+        The book explains the system. The Field Kit helps you apply it.
       </SectionHeading>
 
       <div className="mt-12 grid gap-10 lg:grid-cols-12 lg:gap-12">

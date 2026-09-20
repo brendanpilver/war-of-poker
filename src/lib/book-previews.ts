@@ -88,7 +88,7 @@ export const bookPreviews: BookPreview[] = [
   {
     id: "hand-7-price",
     page: 57,
-    headline: "Same cards. Same opponent. Fold at one stack depth. Call at another.",
+    headline: "Same hand. Different price. Fold at 60 BB. Call at 40 BB.",
     stat: "Q♥Q♣7♦6♦ on Q♦9♣4♠8♥ · fold at 60 BB · call at 40 BB",
     learn:
       "At $300 the call needs 30.0% and the set has 25.0%. At $200 the same call needs 20.1%, and the fold becomes a call.",

@@ -71,10 +71,12 @@ export function InsideTheBook({ compact = false }: { compact?: boolean }) {
         lead={
           compact
             ? undefined
-            : "Four hands from the final chapter, rendered straight from the published file. The answer moves with the hand, the SPR, the equity, the price, and the player — so the same cards are not the same decision twice."
+            : "The right play changes with the hand, stack depth, price, equity, and player. These four hands show the system in action."
         }
       >
-        {compact ? "Three decisions from the book." : "The cards are not the decision."}
+        {compact
+          ? "Three spots where Hold'em instincts get expensive."
+          : "The cards are not the decision."}
       </SectionHeading>
 
       <ul
