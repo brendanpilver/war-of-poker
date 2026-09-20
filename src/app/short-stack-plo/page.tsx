@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { ProductViewed } from "@/components/analytics/product-viewed";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { BookExcerpts } from "@/components/marketing/book-excerpts";
 import { EducationalDisclaimer } from "@/components/marketing/educational-disclaimer";
 import { ExpensiveDecision } from "@/components/marketing/expensive-decision";
 import { Faq } from "@/components/marketing/faq";
+import { InsideTheBook } from "@/components/marketing/inside-the-book";
 import { Pricing } from "@/components/marketing/pricing";
 import { ProductHero } from "@/components/marketing/product-hero";
 import { WhatYouGet } from "@/components/marketing/what-you-get";
@@ -18,9 +18,14 @@ import { siteUrl } from "@/lib/site";
  * The sales page, reduced from twelve modules to seven sections.
  *
  * Order follows the decision a cold visitor actually makes: what it is and what
- * it costs, proof that the reasoning is real, what they'll learn, what they
- * get, a sample, the price, then the questions and the disclaimer. Pricing
- * moved well up from the foot of the page.
+ * it costs, proof that the reasoning is real, what they'll learn, the pages
+ * where they learn it, what they get, the price, then the questions and the
+ * disclaimer. Pricing moved well up from the foot of the page.
+ *
+ * `BookExcerpts` used to sit between the sample and the price, arguing from
+ * three pull quotes that the book has a method. `InsideTheBook` now makes that
+ * case with the pages themselves, so the quotes were dropped rather than
+ * repeated. The component is still in the tree, unused.
  */
 
 const title = "Short Stack PLO: Live Pot-Limit Omaha Strategy | War of Poker";
@@ -81,8 +86,8 @@ export default function ShortStackPloPage() {
         <ProductHero variant="product" />
         <ExpensiveDecision ctaLocation="product-expensive-decision" />
         <WhatYouLearn />
+        <InsideTheBook />
         <WhatYouGet />
-        <BookExcerpts />
         <Pricing />
         <Faq />
         <EducationalDisclaimer />

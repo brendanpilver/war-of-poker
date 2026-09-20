@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ExpensiveDecision } from "@/components/marketing/expensive-decision";
 import { FrameworkStrip } from "@/components/marketing/framework-strip";
+import { InsideTheBook } from "@/components/marketing/inside-the-book";
 import { Pricing } from "@/components/marketing/pricing";
 import { ProductHero } from "@/components/marketing/product-hero";
 import { QuizCta } from "@/components/marketing/quiz-cta";
@@ -80,6 +81,7 @@ export default function Home() {
       <main id="main" className="flex-1">
         <ProductHero variant="home" />
         <ExpensiveDecision ctaLocation="home-expensive-decision" />
+        <InsideTheBook compact />
         <WhatYouGet compact />
         <Section size="compact" aria-labelledby="home-framework-title">
           <FrameworkStrip headingId="home-framework-title" />
