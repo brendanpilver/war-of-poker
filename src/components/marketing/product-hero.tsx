@@ -24,6 +24,9 @@ import { BuyOfferButton } from "./buy-offer-button";
  * - **home** leads with the 10-Hand Challenge. Social and content links point
  *   at the challenge, and it sells the system better than a price does: ten
  *   worked decisions in River Potter's voice, with the player price at the end.
+ *   Both variants name that price in figures. "Your player price is unlocked"
+ *   told a first-time visitor nothing -- the reward has to be a number before
+ *   it can be a reason to start.
  * - **product** leads with checkout. This is the dedicated sales page, and
  *   someone who arrives ready to buy should not have to navigate around a free
  *   quiz to do it. The challenge follows as the alternative for a reader who
@@ -61,6 +64,7 @@ const secondaryLinkClass =
 export function ProductHero({ variant }: { variant: "home" | "product" }) {
   const system = offers.system;
   const book = offers.book;
+  const player = offers["system-quiz"];
 
   const bookLine = (
     <p className="mt-4 text-[15px] text-bone-muted">
@@ -132,7 +136,11 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
               <div className="mt-6 border-t border-line pt-5 sm:mt-7 sm:pt-6">
                 <p className="text-[15px] leading-snug text-pretty text-bone-muted">
                   Not sure yet? Ten live PLO decisions, worked, free. Finish it
-                  and your player price on the Complete System is unlocked.
+                  and your player price on the Complete System is{" "}
+                  <span className="font-semibold text-bone">
+                    {formatPrice(player.amountCents)}
+                  </span>{" "}
+                  instead of {formatPrice(system.amountCents)}.
                 </p>
                 <TrackedCta
                   href={CHALLENGE_PATH}
@@ -157,7 +165,11 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
                 </TrackedCta>
                 <p className="mt-3 text-[15px] leading-snug text-pretty text-bone-muted">
                   Free. Ten live PLO decisions, worked. Finish it and your player
-                  price on the Complete System is unlocked.
+                  price on the Complete System is{" "}
+                  <span className="font-semibold text-bone">
+                    {formatPrice(player.amountCents)}
+                  </span>{" "}
+                  instead of {formatPrice(system.amountCents)}.
                 </p>
               </div>
 

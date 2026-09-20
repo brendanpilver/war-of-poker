@@ -1,7 +1,9 @@
 import { Suspense } from "react";
+import { TrackedCta } from "@/components/analytics/tracked-cta";
 import { fieldKitCount } from "@/lib/field-kit";
 import { formatPrice, offers } from "@/lib/offers";
-import { shortStackPlo } from "@/lib/short-stack-plo";
+import { totalHands } from "@/lib/quiz/hands";
+import { CHALLENGE_PATH, shortStackPlo } from "@/lib/short-stack-plo";
 import { BuyOfferButton } from "./buy-offer-button";
 import { PlayerPriceNotice } from "./player-price-notice";
 import { Section, SectionHeading } from "./section";
@@ -20,11 +22,21 @@ import { Section, SectionHeading } from "./section";
  * pattern: Book Only is a full, plainly described choice with its own real
  * button and its own price, there is no countdown, and no scarcity is implied.
  *
- * The player price is not advertised here. It is earned by finishing the
- * 10-Hand Challenge and appears on its results screen, so showing it to every
- * visitor would undercut the thing it rewards. `PlayerPriceNotice` is the one
- * exception: a completer who asked for their results by email arrives back
- * through a link carrying `?offer=player`, and it renders for them only.
+ * The player price is named here, in figures, as a third way in. It used to be
+ * withheld on the reasoning that showing it to every visitor would undercut the
+ * thing it rewards -- but withholding it meant nobody could tell what finishing
+ * the challenge was worth, and "your player price is unlocked" is not an offer
+ * to anyone reading it for the first time. Naming the number makes the challenge
+ * worth starting rather than worth bypassing.
+ *
+ * Its card sells the challenge, not the checkout: the two purchasable offers
+ * lead and keep their buy buttons, and the earned price follows with the
+ * challenge as its call to action. A reader who is ready to buy is never sent
+ * through it to do so.
+ *
+ * `PlayerPriceNotice` is separate and still conditional: a completer who asked
+ * for their results by email arrives back through a link carrying
+ * `?offer=player`, and the buy button at that price renders for them only.
  */
 
 export const PRICING_SECTION_ID = "pricing";
@@ -43,6 +55,7 @@ const bookIncludes = [
 export function Pricing() {
   const system = offers.system;
   const book = offers.book;
+  const player = offers["system-quiz"];
 
   return (
     <Section
@@ -55,7 +68,7 @@ export function Pricing() {
       </Suspense>
 
       <SectionHeading id="pricing-title" eyebrow="Pricing">
-        Two ways in.
+        Three ways in.
       </SectionHeading>
 
       <div className="mt-10 grid items-start gap-6 lg:grid-cols-12">
@@ -133,6 +146,41 @@ export function Pricing() {
           <p className="mt-4 text-sm text-bone-faint">
             {shortStackPlo.format} · {shortStackPlo.access}
           </p>
+        </div>
+      </div>
+
+      <div className="mt-6 border-t-2 border-gold bg-ink-card p-6 sm:p-8">
+        <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
+          <div className="max-w-xl">
+            <p className="font-mono text-[11px] tracking-[0.18em] text-gold uppercase">
+              Earn it
+            </p>
+            <h3 className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="text-2xl font-bold text-bone uppercase">
+                Complete System
+              </span>
+              <span className="text-4xl font-bold text-bone tabular-nums">
+                {formatPrice(player.amountCents)}
+              </span>
+              <span className="text-sm text-bone-faint">
+                instead of {formatPrice(system.amountCents)}
+              </span>
+            </h3>
+            <p className="mt-3 leading-snug text-pretty text-bone-muted">
+              Finish the free {totalHands}-Hand Challenge and the same Complete
+              System is yours at your player price. Ten live PLO decisions,
+              worked — no email needed to see the answers.
+            </p>
+          </div>
+
+          <TrackedCta
+            href={CHALLENGE_PATH}
+            location="pricing-player-price"
+            label={`Take the ${totalHands}-Hand Challenge`}
+            className="inline-flex shrink-0 items-center justify-center rounded-[2px] border border-gold px-6 py-3.5 text-center font-semibold whitespace-nowrap text-gold transition-colors duration-150 hover:bg-gold hover:text-ink active:translate-y-px"
+          >
+            Take the {totalHands}-Hand Challenge
+          </TrackedCta>
         </div>
       </div>
     </Section>

@@ -266,6 +266,15 @@ code, a sale or a struck-through number. Its effect is that a challenge
 completer gets the whole system for $10 more than the standalone book — which is
 the acquisition offer, not a claim about what the Field Kit is worth.
 
+**The number is public.** `Pricing` names $29 as a third way in, and both hero
+variants and `ChallengeCta` state it in figures rather than promising that "your
+player price is unlocked" — which told a first-time reader nothing and so gave
+them no reason to start. Naming it makes the challenge worth ten minutes instead
+of worth skipping. The trade is deliberate and worth restating: a visitor who
+was ready to pay $39 can now see the cheaper route and take it. What they cannot
+do is buy at $29 from that card — it sells the challenge, and only
+`PlayerPriceNotice` and the results screen carry a buy button at that price.
+
 `system-quiz` is a separate offer rather than a discount on `system` so
 reporting can distinguish an earned sale from a full-price one, and so the
 earned amount can move without touching a component. **The id keeps its

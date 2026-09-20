@@ -1,4 +1,5 @@
 import { TrackedCta } from "@/components/analytics/tracked-cta";
+import { formatPrice, offers } from "@/lib/offers";
 import { totalHands } from "@/lib/quiz/hands";
 import { CHALLENGE_PATH } from "@/lib/short-stack-plo";
 import { Section } from "./section";
@@ -28,7 +29,11 @@ export function ChallengeCta({ location }: { location: string }) {
           </h2>
           <p className="mt-3 leading-relaxed text-pretty text-bone-muted">
             Each hand shows you the reasoning the moment you answer. Finish all{" "}
-            {totalHands} and your player price on the Complete System is unlocked.
+            {totalHands} and your player price on the Complete System is{" "}
+            <span className="font-semibold text-bone">
+              {formatPrice(offers["system-quiz"].amountCents)}
+            </span>{" "}
+            instead of {formatPrice(offers.system.amountCents)}.
           </p>
         </div>
 
