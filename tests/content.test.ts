@@ -9,7 +9,13 @@ import {
   series,
   trackedLink,
 } from "../src/lib/content/series";
-import { offers, formatPrice, isOfferId } from "../src/lib/offers";
+import {
+  formatPrice,
+  isOfferId,
+  offerIds,
+  offers,
+  SEPARATE_TOTAL_CENTS,
+} from "../src/lib/offers";
 import { fieldKit } from "../src/lib/field-kit";
 
 describe("content IDs", () => {
@@ -64,37 +70,90 @@ describe("series catalogue", () => {
 });
 
 describe("offers", () => {
-  it("prices the book at $19 and the Complete System at $39", () => {
-    assert.equal(offers.book.amountCents, 1900);
-    assert.equal(offers.system.amountCents, 3900);
+  it("prices the book at $25", () => {
+    assert.equal(offers.book.amountCents, 2500);
+    assert.equal(formatPrice(offers.book.amountCents), "$25");
   });
 
-  it("defaults the challenge player price to $29 against the $39 public price", () => {
+  it("prices the Field Kit on its own at $19", () => {
+    assert.equal(offers["field-kit"].amountCents, 1900);
+    assert.equal(formatPrice(offers["field-kit"].amountCents), "$19");
+  });
+
+  it("prices the Complete System at $39", () => {
+    assert.equal(offers.system.amountCents, 3900);
+    assert.equal(formatPrice(offers.system.amountCents), "$39");
+  });
+
+  it("defaults the challenge Player Price to $29 against the $39 public price", () => {
     assert.equal(offers["system-quiz"].amountCents, 2900);
+    assert.equal(formatPrice(offers["system-quiz"].amountCents), "$29");
     assert.equal(offers["system-quiz"].compareAtCents, 3900);
   });
 
-  it("keeps the player price below the public one it is compared against", () => {
+  it("prices the book-owner upgrade at $15", () => {
+    assert.equal(offers["field-kit-upgrade"].amountCents, 1500);
+    assert.equal(formatPrice(offers["field-kit-upgrade"].amountCents), "$15");
+  });
+
+  it("totals $44 bought separately, so the Complete System saves $5", () => {
+    assert.equal(SEPARATE_TOTAL_CENTS, 4400);
+    assert.equal(SEPARATE_TOTAL_CENTS - offers.system.amountCents, 500);
+  });
+
+  it("puts the Player Price only $4 above the book alone", () => {
+    assert.equal(offers["system-quiz"].amountCents - offers.book.amountCents, 400);
+  });
+
+  it("makes book-then-upgrade $40, one dollar above the Complete System upfront", () => {
+    const bookFirst = offers.book.amountCents + offers["field-kit-upgrade"].amountCents;
+    assert.equal(bookFirst, 4000);
+    assert.ok(offers.system.amountCents < bookFirst);
+  });
+
+  it("keeps the Player Price below the public one it is compared against", () => {
     const player = offers["system-quiz"];
     assert.ok(player.compareAtCents !== undefined);
     assert.ok(player.amountCents < player.compareAtCents);
     assert.equal(player.compareAtCents, offers.system.amountCents);
   });
 
-  it("leaves the book cheaper than every route to the Complete System", () => {
-    assert.ok(offers.book.amountCents < offers["system-quiz"].amountCents);
-    assert.ok(offers["system-quiz"].amountCents < offers.system.amountCents);
+  it("offers exactly the five intended prices, and none of the retired ones", () => {
+    assert.deepEqual(
+      Object.fromEntries(offerIds.map((id) => [id, offers[id].amountCents])),
+      {
+        book: 2500,
+        "field-kit": 1900,
+        system: 3900,
+        "system-quiz": 2900,
+        "field-kit-upgrade": 1500,
+      },
+    );
+    // $49 was the old Complete System; $19 was the old book.
+    assert.ok(offerIds.every((id) => offers[id].amountCents !== 4900));
+    assert.notEqual(offers.book.amountCents, 1900);
   });
 
-  it("marks only the player-price offer as challenge-completer-only", () => {
-    assert.equal(offers["system-quiz"].quizCompleterOnly, true);
-    assert.equal(offers.system.quizCompleterOnly, false);
-    assert.equal(offers.book.quizCompleterOnly, false);
+  it("marks only the Player Price offer as challenge-completer-only", () => {
+    for (const id of offerIds) {
+      assert.equal(offers[id].quizCompleterOnly, id === "system-quiz", id);
+    }
   });
 
-  it("gives both system offers the same product entitlement", () => {
-    assert.equal(offers.system.product, offers["system-quiz"].product);
+  it("marks only the upgrade as sold to book owners only", () => {
+    for (const id of offerIds) {
+      assert.equal(offers[id].bookOwnerOnly, id === "field-kit-upgrade", id);
+    }
+  });
+
+  it("maps every offer onto the product it should deliver", () => {
     assert.equal(offers.book.product, "book");
+    assert.equal(offers["field-kit"].product, "field-kit");
+    assert.equal(offers.system.product, "complete-system");
+    assert.equal(offers["system-quiz"].product, "complete-system");
+    // The upgrade delivers the whole system so the new link carries the book
+    // the buyer already owns alongside the kit.
+    assert.equal(offers["field-kit-upgrade"].product, "complete-system");
   });
 
   it("describes the book and the system as different products", () => {
@@ -103,14 +162,19 @@ describe("offers", () => {
   });
 
   it("validates offer ids", () => {
-    assert.ok(isOfferId("system-quiz"));
+    for (const id of ["book", "field-kit", "system", "system-quiz", "field-kit-upgrade"]) {
+      assert.ok(isOfferId(id), id);
+    }
     assert.equal(isOfferId("free"), false);
     assert.equal(isOfferId(null), false);
+    // Inherited object keys are not offers.
+    assert.equal(isOfferId("toString"), false);
+    assert.equal(isOfferId("__proto__"), false);
   });
 
   it("formats whole dollars without cents", () => {
     assert.equal(formatPrice(3900), "$39");
-    assert.equal(formatPrice(1900), "$19");
+    assert.equal(formatPrice(1500), "$15");
     assert.equal(formatPrice(3950), "$39.50");
   });
 });

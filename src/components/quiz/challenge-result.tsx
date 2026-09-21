@@ -279,16 +279,21 @@ export function ChallengeResult({ result, answers, onRestart }: ChallengeResultP
 
         <div className="mt-8 border-t border-line pt-7">
           <p className="font-mono text-[11px] tracking-[0.18em] text-gold uppercase">
-            Challenge complete. Your player price is unlocked.
+            You unlocked the Player Price
           </p>
           <h2
             id="player-price-title"
-            className="mt-3 text-2xl font-bold text-bone uppercase sm:text-3xl"
+            className="mt-3 text-2xl font-bold text-balance text-bone uppercase sm:text-3xl"
           >
-            {shortStackPlo.title} — Complete System
+            Get {shortStackPlo.title} + the complete Field Kit for{" "}
+            {formatPrice(playerOffer.amountCents)}
           </h2>
           <p className="mt-3 max-w-xl leading-relaxed text-pretty text-bone-muted">
-            {playerOffer.description}
+            The Complete System — the book and all seven Field Kit tools — for{" "}
+            {formatPrice(playerOffer.amountCents)} instead of{" "}
+            {formatPrice(publicPriceCents)}. That is everything, for only{" "}
+            {formatPrice(playerOffer.amountCents - offers.book.amountCents)} more
+            than the book alone.
           </p>
 
           <dl className="mt-6 flex flex-wrap items-baseline gap-x-10 gap-y-3">
@@ -311,7 +316,7 @@ export function ChallengeResult({ result, answers, onRestart }: ChallengeResultP
             location="challenge-result"
             email={email || undefined}
             className="mt-6 w-full sm:w-auto"
-            label={`Get the Complete System — ${formatPrice(playerOffer.amountCents)}`}
+            label={`Get the Book + Field Kit — ${formatPrice(playerOffer.amountCents)}`}
           />
           <p className="mt-4 text-sm text-bone-faint">
             Prefer to read the detail first?{" "}

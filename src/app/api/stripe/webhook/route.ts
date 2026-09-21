@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { recordEvent } from "@/lib/analytics/record";
+import {
+  createUpgradeEntitlement,
+  findBookOwner,
+  upgradeUrl,
+} from "@/lib/book-ownership";
 import { createDeliveryToken, TOKEN_TTL_LABEL, assetsFor } from "@/lib/delivery";
 import { sendEmail } from "@/lib/email/client";
 import { purchaseEmail, renderHtml, renderText } from "@/lib/email/templates";
@@ -53,6 +58,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
+  if (event.type === "charge.refunded") {
+    return recordRefund(event.data.object as Stripe.Charge);
+  }
+
   if (event.type !== "checkout.session.completed") {
     // Acknowledge everything else so Stripe stops retrying it.
     return NextResponse.json({ received: true });
@@ -71,7 +80,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true, ignored: "unknown_offer" });
   }
 
-  const email = parseEmail(
+  let email = parseEmail(
     session.customer_details?.email ?? session.customer_email ?? null,
   );
   if (!email) {
@@ -88,6 +97,29 @@ export async function POST(request: Request) {
     // real and must not be lost because the database was briefly unreachable.
     console.error("[stripe] no database configured; cannot record", session.id);
     return NextResponse.json({ error: "Storage unavailable." }, { status: 500 });
+  }
+
+  // A book-owner upgrade belongs to the book's buyer. It is recorded against,
+  // and delivered to, the address on the original book purchase -- never to an
+  // address typed at checkout -- so paying for someone else's upgrade link only
+  // ever delivers the Field Kit to its rightful owner.
+  let upgradeOf: string | null = null;
+  let deliver = true;
+  if (offer.bookOwnerOnly) {
+    upgradeOf = session.metadata?.upgrade_of || null;
+    const owner = upgradeOf ? await findBookOwner(upgradeOf) : null;
+    if (owner === undefined) {
+      console.error("[stripe] cannot reach the book purchase for", session.id);
+      return NextResponse.json({ error: "Storage unavailable." }, { status: 500 });
+    }
+    if (owner) {
+      email = owner.email;
+    } else {
+      // Checkout verified ownership, so this means the book was refunded in
+      // between. The money is real and is recorded; delivery waits for a human.
+      console.error("[stripe] upgrade without a qualifying book purchase", session.id);
+      deliver = false;
+    }
   }
 
   const subscriberId = await markCustomer(email, offer.product, {
@@ -116,6 +148,9 @@ export async function POST(request: Request) {
         currency: session.currency ?? "usd",
         status: "paid",
         ...attributionColumns,
+        // Only named for upgrades, so a database without the 0003 column still
+        // records every other sale.
+        ...(upgradeOf ? { upgrade_of: upgradeOf } : {}),
       },
       { onConflict: "stripe_checkout_session_id" },
     )
@@ -148,15 +183,22 @@ export async function POST(request: Request) {
     },
   });
 
+  if (!deliver) return NextResponse.json({ received: true, held: "upgrade_owner" });
+
   // Delivery. A failed email must not fail the webhook: the purchase is already
   // recorded, and /thank-you can mint the same link from the verified session.
   const token = createDeliveryToken({ purchaseId: purchase.id, product: offer.product });
   if (token) {
+    // A book purchase also carries its permanent upgrade entitlement, as a
+    // secondary link beneath the download.
+    const entitlement =
+      offer.product === "book" ? createUpgradeEntitlement(purchase.id) : null;
     const content = purchaseEmail({
       productName: offer.name,
       includes: assetsFor(offer.product).map((asset) => asset.name),
       downloadUrl: `${siteUrl}/downloads?token=${encodeURIComponent(token)}`,
       expiresLabel: TOKEN_TTL_LABEL,
+      upgradeUrl: entitlement ? upgradeUrl(entitlement) : undefined,
     });
 
     const sent = await sendEmail({
@@ -173,5 +215,38 @@ export async function POST(request: Request) {
     console.error("[stripe] DELIVERY_SECRET unset; no download link sent");
   }
 
+  return NextResponse.json({ received: true });
+}
+
+/**
+ * A full refund marks the purchase `refunded`. That is what revokes a book
+ * purchase's upgrade entitlement (`src/lib/book-ownership.ts`). Partial refunds
+ * leave the sale standing. Download links already issued are not revoked here;
+ * they expire on their own schedule.
+ */
+async function recordRefund(charge: Stripe.Charge) {
+  const paymentIntent =
+    typeof charge.payment_intent === "string"
+      ? charge.payment_intent
+      : (charge.payment_intent?.id ?? null);
+
+  if (!charge.refunded || !paymentIntent) {
+    return NextResponse.json({ received: true, ignored: "partial_refund" });
+  }
+
+  const db = supabaseAdmin();
+  if (!db) {
+    return NextResponse.json({ error: "Storage unavailable." }, { status: 500 });
+  }
+
+  const { error } = await db
+    .from("purchases")
+    .update({ status: "refunded" })
+    .eq("stripe_payment_intent_id", paymentIntent);
+
+  if (error) {
+    console.error("[stripe] failed to record refund", error.message);
+    return NextResponse.json({ error: "Could not record." }, { status: 500 });
+  }
   return NextResponse.json({ received: true });
 }

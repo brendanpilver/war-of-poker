@@ -35,6 +35,8 @@ export type EmailContent = {
   /** Paragraphs and headings, rendered to both HTML and plain text. */
   blocks: Block[];
   cta?: { label: string; href: string };
+  /** Secondary content rendered beneath the `cta` button, so it never outranks it. */
+  after?: Block[];
 };
 
 type Block =
@@ -118,14 +120,14 @@ export function welcomeEmail(options: {
   });
 
   if (finished) {
-    blocks.push({ kind: "h", text: "Your player price" });
+    blocks.push({ kind: "h", text: "You unlocked the Player Price" });
     blocks.push({
       kind: "p",
-      text: `Because you finished the challenge, the Short Stack PLO Complete System — the strategy guide plus the full Field Kit — is ${formatPrice(player.amountCents)} for you rather than ${formatPrice(publicPrice)}. The link below holds it open; there is no countdown behind it.`,
+      text: `Because you finished the challenge, you can get Short Stack PLO + the complete Field Kit for ${formatPrice(player.amountCents)}. That is the whole Complete System — the book and all seven Field Kit tools — which is regularly ${formatPrice(publicPrice)}. The link below holds it open; there is no countdown behind it.`,
     });
     blocks.push({
       kind: "link",
-      text: `Get the Complete System — ${formatPrice(player.amountCents)}`,
+      text: `Get the Book + Field Kit — ${formatPrice(player.amountCents)}`,
       href: options.playerPriceUrl,
     });
   }
@@ -319,7 +321,7 @@ export const sequence: {
         },
         {
           kind: "p",
-          text: `Because you finished the challenge, the Complete System — the strategy guide plus the full Field Kit — is ${formatPrice(offers["system-quiz"].amountCents)} rather than ${formatPrice(offers.system.amountCents)}. That is your player price, and it is still open.`,
+          text: `Because you finished the challenge, you can get Short Stack PLO + the complete Field Kit for ${formatPrice(offers["system-quiz"].amountCents)} instead of the regular ${formatPrice(offers.system.amountCents)} — everything, for only ${formatPrice(offers["system-quiz"].amountCents - offers.book.amountCents)} more than the book alone. That is your Player Price, and it is still open.`,
         },
         {
           kind: "p",
@@ -332,7 +334,7 @@ export const sequence: {
         { kind: "p", text: signature },
       ],
       cta: {
-        label: `Get the Complete System — ${formatPrice(offers["system-quiz"].amountCents)}`,
+        label: `Get the Book + Field Kit — ${formatPrice(offers["system-quiz"].amountCents)}`,
         href: playerPriceLink("offer-reminder"),
       },
     },
@@ -344,20 +346,44 @@ export function purchaseEmail(options: {
   includes: string[];
   downloadUrl: string;
   expiresLabel: string;
+  /**
+   * A book purchase's permanent upgrade link. Rendered beneath the download
+   * button as a secondary offer, never above it.
+   */
+  upgradeUrl?: string;
 }): EmailContent {
+  const blocks: Block[] = [
+    { kind: "p", text: "Thank you. Your purchase is confirmed." },
+    { kind: "h", text: `Short Stack PLO — ${options.productName}` },
+    { kind: "list", items: options.includes },
+    {
+      kind: "p",
+      text: `Use the link below to open your download page. It is unique to your purchase, so keep it to yourself; it stays valid for ${options.expiresLabel}. If it lapses, reply to this email and I'll send a fresh one.`,
+    },
+  ];
+
+  blocks.push({ kind: "p", text: signature });
+
+  const upgradePrice = formatPrice(offers["field-kit-upgrade"].amountCents);
+  const after: Block[] | undefined = options.upgradeUrl
+    ? [
+        {
+          kind: "p",
+          text: `Want the Field Kit later? As a Short Stack PLO owner, you can add the complete Field Kit anytime for ${upgradePrice}.`,
+        },
+        {
+          kind: "link",
+          text: `Add the Field Kit for ${upgradePrice}`,
+          href: options.upgradeUrl,
+        },
+      ]
+    : undefined;
+
   return {
     subject: `Your copy of Short Stack PLO — ${options.productName}`,
-    blocks: [
-      { kind: "p", text: "Thank you. Your purchase is confirmed." },
-      { kind: "h", text: `Short Stack PLO — ${options.productName}` },
-      { kind: "list", items: options.includes },
-      {
-        kind: "p",
-        text: `Use the link below to open your download page. It is unique to your purchase, so keep it to yourself; it stays valid for ${options.expiresLabel}. If it lapses, reply to this email and I'll send a fresh one.`,
-      },
-      { kind: "p", text: signature },
-    ],
+    blocks,
     cta: { label: "Open your downloads", href: options.downloadUrl },
+    after,
   };
 }
 
@@ -377,8 +403,8 @@ function escapeHtml(value: string): string {
  * Plain, table-free HTML with inline styles. Email clients are not browsers:
  * this keeps to what renders consistently rather than reproducing the site.
  */
-export function renderHtml(content: EmailContent): string {
-  const body = content.blocks
+function blocksHtml(blocks: Block[]): string {
+  return blocks
     .map((block) => {
       switch (block.kind) {
         case "h":
@@ -396,6 +422,11 @@ export function renderHtml(content: EmailContent): string {
       }
     })
     .join("");
+}
+
+export function renderHtml(content: EmailContent): string {
+  const body = blocksHtml(content.blocks);
+  const after = content.after ? blocksHtml(content.after) : "";
 
   const cta = content.cta
     ? `<p style="margin:32px 0;"><a href="${escapeHtml(content.cta.href)}" style="display:inline-block;background:#d6a129;color:#0b0a09;font-weight:700;text-decoration:none;padding:13px 24px;border-radius:2px;">${escapeHtml(content.cta.label)}</a></p>`
@@ -406,14 +437,15 @@ export function renderHtml(content: EmailContent): string {
     `<div style="max-width:560px;margin:0 auto;background:#ffffff;padding:32px;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;">`,
     body,
     cta,
+    after,
     `<hr style="margin:32px 0 16px;border:0;border-top:1px solid #e2dbd0;">`,
     `<p style="margin:0;font-size:12px;color:#8a8375;">War of Poker · <a href="${siteUrl}" style="color:#8a8375;">warofpoker.com</a></p>`,
     `</div></body></html>`,
   ].join("");
 }
 
-export function renderText(content: EmailContent): string {
-  const body = content.blocks
+function blocksText(blocks: Block[]): string {
+  return blocks
     .map((block) => {
       switch (block.kind) {
         case "h":
@@ -427,7 +459,11 @@ export function renderText(content: EmailContent): string {
       }
     })
     .join("\n\n");
+}
 
+export function renderText(content: EmailContent): string {
+  const body = blocksText(content.blocks);
   const cta = content.cta ? `\n\n${content.cta.label}: ${content.cta.href}` : "";
-  return `${body}${cta}\n\n—\nWar of Poker · ${siteUrl}\n`;
+  const after = content.after ? `\n\n${blocksText(content.after)}` : "";
+  return `${body}${cta}${after}\n\n—\nWar of Poker · ${siteUrl}\n`;
 }

@@ -1,5 +1,5 @@
 import { TrackedCta } from "@/components/analytics/tracked-cta";
-import { formatPrice, offers } from "@/lib/offers";
+import { formatPrice, offers, SEPARATE_TOTAL_CENTS } from "@/lib/offers";
 import { totalHands } from "@/lib/quiz/hands";
 import {
   CHALLENGE_PATH,
@@ -26,7 +26,12 @@ import { BuyOfferButton } from "./buy-offer-button";
  *
  * The middle step is not a second checkout. Its call to action is the
  * challenge, because $29 is earned by finishing it — a buy button at that price
- * for every visitor would retire the thing it rewards. See `Pricing`.
+ * for every visitor would retire the thing it rewards. Its copy names exactly
+ * what $29 buys — the book and the complete Field Kit — so nobody has to work
+ * out what the Player Price includes. See `Pricing`.
+ *
+ * The book on its own is a single quiet line beneath both, deliberately not a
+ * third step of equal weight.
  *
  * `variant` no longer changes the layout, only where the pricing link points
  * and how each placement is named in reporting: the sales page links to its own
@@ -97,7 +102,8 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
               </span>
             </p>
             <p className="mt-1.5 text-bone-muted">
-              The book and the full Field Kit — learn the method, and apply it.
+              The book and the complete Field Kit —{" "}
+              {formatPrice(SEPARATE_TOTAL_CENTS)} bought separately.
             </p>
             <BuyOfferButton
               offerId="system"
@@ -117,9 +123,10 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
               </span>
             </p>
             <p className="mt-1.5 text-bone-muted">
-              Finish the free {totalHands}-Hand Challenge and the same Complete
-              System is {formatPrice(player.amountCents)} instead of{" "}
-              {formatPrice(system.amountCents)}.
+              Take the free {totalHands}-Hand Challenge and unlock the complete{" "}
+              {formatPrice(system.amountCents)} system for{" "}
+              {formatPrice(player.amountCents)}. You get everything: the book
+              and the complete Field Kit.
             </p>
             <TrackedCta
               href={CHALLENGE_PATH}
@@ -132,15 +139,16 @@ export function ProductHero({ variant }: { variant: "home" | "product" }) {
           </div>
 
           <p className="mt-6 border-t border-line pt-5 text-[15px] text-bone-muted sm:mt-7 sm:pt-6">
-            Book only — {formatPrice(book.amountCents)}.{" "}
+            Prefer to start with the book?{" "}
             <TrackedCta
               href={variant === "home" ? productPricingHref : "#pricing"}
               location={`${variant}-hero-pricing`}
               label="pricing"
               className="text-bone underline decoration-bone/30 underline-offset-4 transition-colors hover:decoration-gold"
             >
-              See all three options
+              Get {shortStackPlo.title} for {formatPrice(book.amountCents)}
             </TrackedCta>
+            .
           </p>
         </div>
       </div>

@@ -98,8 +98,10 @@ function rate(numerator: number, denominator: number): number {
 
 const emptyByOffer = (): PurchaseTotals["byOffer"] => ({
   book: { count: 0, revenueCents: 0 },
+  "field-kit": { count: 0, revenueCents: 0 },
   system: { count: 0, revenueCents: 0 },
   "system-quiz": { count: 0, revenueCents: 0 },
+  "field-kit-upgrade": { count: 0, revenueCents: 0 },
 });
 
 /** Rows we read out of the events log for a window. */
@@ -195,7 +197,7 @@ export async function loadGrowthMetrics(days = 30): Promise<GrowthMetrics | null
 
   for (const row of purchaseRows) {
     const offerId = row.offer_id as OfferId;
-    if (!(offerId in offers)) continue;
+    if (!Object.hasOwn(offers, offerId)) continue;
     purchases.byOffer[offerId].count += 1;
     purchases.byOffer[offerId].revenueCents += row.amount_cents;
   }

@@ -35,10 +35,11 @@ export function PlayerPriceNotice() {
   return (
     <div className="mb-10 border-t-2 border-gold bg-ink-card p-6 sm:p-8">
       <p className="font-mono text-[11px] tracking-[0.18em] text-gold uppercase">
-        You finished the challenge — your player price is still on
+        You finished the challenge — your Player Price is still on
       </p>
-      <h3 className="mt-3 text-2xl font-bold text-bone uppercase">
-        Complete System
+      <h3 className="mt-3 text-2xl font-bold text-balance text-bone uppercase">
+        Get Short Stack PLO + the complete Field Kit for{" "}
+        {formatPrice(offer.amountCents)}
       </h3>
       <dl className="mt-5 flex flex-wrap items-baseline gap-x-8 gap-y-2">
         <div className="flex items-baseline gap-2">
@@ -58,7 +59,7 @@ export function PlayerPriceNotice() {
         offerId="system-quiz"
         location="pricing-player-price"
         className="mt-6 w-full sm:w-auto"
-        label={`Get the Complete System — ${formatPrice(offer.amountCents)}`}
+        label={`Get the Book + Field Kit — ${formatPrice(offer.amountCents)}`}
       />
     </div>
   );

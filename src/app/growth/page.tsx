@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ADMIN_COOKIE, isAuthorizedToken } from "@/lib/admin-auth";
 import { env } from "@/lib/env";
 import { loadGrowthMetrics, type GrowthMetrics } from "@/lib/growth-metrics";
-import { formatPrice, offers } from "@/lib/offers";
+import { formatPrice, offerIds, offers } from "@/lib/offers";
 import { cookies } from "next/headers";
 
 /**
@@ -205,8 +205,8 @@ function Dashboard({ metrics }: { metrics: GrowthMetrics }) {
           />
         </div>
 
-        <div className="mt-px grid gap-px border border-line bg-line sm:grid-cols-3">
-          {(["book", "system", "system-quiz"] as const).map((offerId) => {
+        <div className="mt-px grid gap-px border border-line bg-line sm:grid-cols-3 lg:grid-cols-5">
+          {offerIds.map((offerId) => {
             const entry = purchases.byOffer[offerId];
             const offer = offers[offerId];
             return (

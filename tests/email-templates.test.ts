@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { renderHtml, renderText, sequence, welcomeEmail } from "../src/lib/email/templates";
+import {
+  purchaseEmail,
+  renderHtml,
+  renderText,
+  sequence,
+  welcomeEmail,
+} from "../src/lib/email/templates";
 import { offers, formatPrice } from "../src/lib/offers";
 
 const survivalCardUrl = "https://warofpoker.com/downloads/nlh-to-plo-survival-card.pdf";
@@ -43,6 +49,13 @@ describe("the results email", () => {
     assert.match(renderHtml(finished()), /short-stack-plo\?src=results-email&amp;offer=player/);
   });
 
+  it("says the $29 Player Price buys both the book and the complete Field Kit", () => {
+    const text = renderText(finished());
+    assert.match(text, /You unlocked the Player Price/i);
+    assert.match(text, /Short Stack PLO \+ the complete Field Kit for \$29/);
+    assert.match(text, /regularly \$39/);
+  });
+
   it("offers no player price to someone who did not finish the challenge", () => {
     const content = welcomeEmail({
       quizScore: null,
@@ -80,5 +93,48 @@ describe("the sequence", () => {
     for (const step of sequence) {
       assert.match(step.content.cta?.href ?? "", new RegExp(`src=email-${step.key}`));
     }
+  });
+});
+
+describe("the purchase email", () => {
+  const base = {
+    includes: ["Short Stack PLO (PDF)"],
+    downloadUrl: "https://warofpoker.com/downloads?token=t",
+    expiresLabel: "30 days",
+  };
+  const upgradeUrl = "https://warofpoker.com/upgrade?entitlement=e";
+
+  it("gives a book buyer a permanent $15 upgrade link", () => {
+    const content = purchaseEmail({ ...base, productName: "Book Only", upgradeUrl });
+    const text = renderText(content);
+    assert.match(text, /Want the Field Kit later\?/);
+    assert.match(text, /add the complete Field Kit anytime for \$15/);
+    assert.ok(text.includes(`Add the Field Kit for $15: ${upgradeUrl}`));
+  });
+
+  it("puts the upgrade beneath the download button, never above it", () => {
+    const content = purchaseEmail({ ...base, productName: "Book Only", upgradeUrl });
+    const text = renderText(content);
+    assert.ok(text.indexOf("Open your downloads") < text.indexOf("Want the Field Kit later"));
+    const html = renderHtml(content);
+    assert.ok(html.indexOf("Open your downloads") < html.indexOf("Want the Field Kit later"));
+    // The download is the button; the upgrade is only a text link.
+    assert.equal(content.cta?.href, base.downloadUrl);
+  });
+
+  it("does not offer the upgrade to anyone who already has the Field Kit", () => {
+    const text = renderText(purchaseEmail({ ...base, productName: "Complete System" }));
+    assert.doesNotMatch(text, /\$15/);
+  });
+});
+
+describe("the offer-led sequence copy", () => {
+  it("names both products and the $39 regular price alongside the $29", () => {
+    const reminder = sequence.find((step) => step.key === "offer-reminder");
+    assert.ok(reminder);
+    const text = renderText(reminder.content);
+    assert.match(text, /Short Stack PLO \+ the complete Field Kit for \$29/);
+    assert.match(text, /regular \$39/);
+    assert.match(text, /only \$4 more than the book alone/);
   });
 });

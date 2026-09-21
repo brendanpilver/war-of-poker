@@ -117,6 +117,28 @@ describe("Stripe webhook event handling", () => {
     assert.deepEqual(await response.json(), { received: true });
   });
 
+  it("leaves a partially refunded sale standing", async () => {
+    const { payload, signature } = signedEvent({
+      id: "evt_test_refund",
+      type: "charge.refunded",
+      data: { object: { id: "ch_test", refunded: false, payment_intent: "pi_test" } },
+    });
+    const response = await POST(post(payload, signature));
+    assert.deepEqual(await response.json(), { received: true, ignored: "partial_refund" });
+  });
+
+  it("asks Stripe to retry a full refund it cannot store yet", async () => {
+    // No database in tests: the refund must not be acknowledged and lost,
+    // because the refunded status is what revokes an upgrade entitlement.
+    const { payload, signature } = signedEvent({
+      id: "evt_test_refund_2",
+      type: "charge.refunded",
+      data: { object: { id: "ch_test", refunded: true, payment_intent: "pi_test" } },
+    });
+    const response = await POST(post(payload, signature));
+    assert.equal(response.status, 500);
+  });
+
   it("ignores a session whose offer_id is not in the catalogue", async () => {
     const { payload, signature } = signedEvent(
       checkoutEvent({ metadata: { offer_id: "free-lunch" } }),

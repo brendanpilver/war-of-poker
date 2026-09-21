@@ -3,6 +3,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Challenge } from "@/components/quiz/challenge";
 import { challengeIntro, sharedAssumptions, totalHands } from "@/lib/quiz/hands";
+import { formatPrice, offers } from "@/lib/offers";
 import { CHALLENGE_PATH } from "@/lib/short-stack-plo";
 
 /**
@@ -15,8 +16,7 @@ import { CHALLENGE_PATH } from "@/lib/short-stack-plo";
  */
 
 const title = `The ${totalHands}-Hand Short Stack PLO Challenge | War of Poker`;
-const description =
-  "Ten live PLO hands, ten decisions. Answer, then see River Potter's reasoning immediately — no email required. Finish it and your player price on the Complete System is unlocked.";
+const description = `Ten live PLO hands, ten decisions. Answer, then see River Potter's reasoning immediately — no email required. Finish it and unlock the complete ${formatPrice(offers.system.amountCents)} system — the book and the complete Field Kit — for ${formatPrice(offers["system-quiz"].amountCents)}.`;
 
 export const metadata: Metadata = {
   title,

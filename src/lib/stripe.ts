@@ -36,12 +36,15 @@ export type CheckoutMetadata = {
   utm_campaign: string;
   platform: string;
   landing_page: string;
+  /** For a `field-kit-upgrade`: the book purchase it upgrades. Else "". */
+  upgrade_of: string;
 };
 
 export function buildCheckoutMetadata(
   offerId: OfferId,
   sessionId: string | null,
   attribution: Attribution,
+  upgradeOf: string | null = null,
 ): CheckoutMetadata {
   // Stripe rejects null metadata values, so absent attribution becomes "".
   return {
@@ -53,6 +56,7 @@ export function buildCheckoutMetadata(
     utm_campaign: attribution.utmCampaign ?? "",
     platform: attribution.platform ?? "",
     landing_page: attribution.landingPage ?? "",
+    upgrade_of: upgradeOf ?? "",
   };
 }
 

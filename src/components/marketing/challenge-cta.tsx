@@ -28,12 +28,16 @@ export function ChallengeCta({ location }: { location: string }) {
             translate to shallow-stack PLO.
           </h2>
           <p className="mt-3 leading-relaxed text-pretty text-bone-muted">
-            Each hand shows you the reasoning the moment you answer. Finish all{" "}
-            {totalHands} and your player price on the Complete System is{" "}
+            Each hand shows you the reasoning the moment you answer. Take the
+            free {totalHands}-Hand Challenge and unlock the complete{" "}
+            {formatPrice(offers.system.amountCents)} system for{" "}
             <span className="font-semibold text-bone">
               {formatPrice(offers["system-quiz"].amountCents)}
             </span>{" "}
-            instead of {formatPrice(offers.system.amountCents)}.
+            — the book and the complete Field Kit. Everything for{" "}
+            {formatPrice(offers["system-quiz"].amountCents)}, only{" "}
+            {formatPrice(offers["system-quiz"].amountCents - offers.book.amountCents)}{" "}
+            more than the book alone.
           </p>
         </div>
 

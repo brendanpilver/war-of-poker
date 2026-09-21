@@ -21,6 +21,11 @@ type BuyOfferButtonProps = {
   location: string;
   /** Prefills Stripe Checkout when we already know the address. */
   email?: string;
+  /**
+   * The book purchase's upgrade entitlement, required by offers sold only to
+   * book owners. The server verifies it; nothing is decided here.
+   */
+  entitlement?: string;
   variant?: "primary" | "secondary";
   className?: string;
   label?: string;
@@ -30,6 +35,7 @@ export function BuyOfferButton({
   offerId,
   location,
   email,
+  entitlement,
   variant = "primary",
   className = "",
   label,
@@ -60,6 +66,7 @@ export function BuyOfferButton({
         body: JSON.stringify({
           offerId,
           email,
+          entitlement,
           sessionId: getSessionId(),
           attribution: readAttribution(),
         }),

@@ -269,7 +269,9 @@ export function WhatYouGet({ compact = false }: { compact?: boolean }) {
         )}
         <p className="mt-6 text-bone-muted">
           All seven are included in the Complete System —{" "}
-          <span className="text-bone">{formatPrice(offers.system.amountCents)}</span>.
+          <span className="text-bone">{formatPrice(offers.system.amountCents)}</span>{" "}
+          with the book, or{" "}
+          {formatPrice(offers["field-kit"].amountCents)} on their own.
         </p>
       </div>
     </Section>
