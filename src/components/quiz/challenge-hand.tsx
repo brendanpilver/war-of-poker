@@ -83,20 +83,18 @@ export function ChallengeHandCard({
             )}
           </div>
         )}
-        {/* gap-px over a line-coloured ground gives hairline rules without a
-            dangling border when the row is not full. */}
-        <dl className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3">
+        {/* One fact per row, so any number of facts fills the box: a grid left
+            empty cells whenever the count didn't divide by the column count. */}
+        <dl className="divide-y divide-line">
           {hand.facts.map((fact) => (
             <div
               key={fact.label}
-              className={`bg-ink-raised p-3 sm:p-4 ${fact.wide ? "col-span-2 sm:col-span-3" : ""}`}
+              className="grid gap-1 px-3.5 py-3 sm:grid-cols-[11rem_1fr] sm:items-baseline sm:gap-4 sm:px-5"
             >
               <dt className="font-mono text-[10px] tracking-[0.16em] text-bone-faint uppercase">
                 {fact.label}
               </dt>
-              <dd className="mt-1 text-sm leading-snug text-pretty text-bone sm:mt-1.5">
-                {fact.value}
-              </dd>
+              <dd className="text-sm leading-snug text-pretty text-bone">{fact.value}</dd>
             </div>
           ))}
         </dl>
