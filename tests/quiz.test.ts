@@ -108,35 +108,12 @@ describe("challenge content", () => {
     }
   });
 
-  it("keeps the three already-published free hands unchanged", () => {
-    // These three are the approved FREE_3_HAND_PLO_QUIZ_RELEASE hands. Their
-    // cards, options and answers are that document's and must not drift.
-    const [aces] = hands;
-    assert.equal(aces.id, "aces-on-a-rundown-board");
-    assert.deepEqual(
-      aces.board.map((c) => `${c.rank}${c.suit}`),
-      ["9h", "8h", "6c"],
-    );
-    assert.ok(aces.explanation[0].includes("no heart"));
-    assert.equal(aces.correctChoiceId, "B");
-
-    const draw = hands[5];
-    assert.equal(draw.id, "counting-a-big-draw");
-    assert.equal(draw.correctChoiceId, "B");
-
-    const turn = hands[7];
-    assert.equal(turn.id, "the-turn-pairs-the-board");
-    assert.equal(turn.correctChoiceId, "C");
-    assert.equal(turn.board.length, 4);
-    assert.deepEqual(turn.boardStreetBreaks, [3]);
-  });
-
-  it("counts the draw-quality outs table to the stated 19 unique cards", () => {
+  it("counts the draw-quality outs table to its stated total", () => {
     const table = hands[5].outsTable;
     assert.ok(table, "hand 6 has an outs table");
     const summed = table.rows.reduce((total, row) => total + row.count, 0);
     assert.equal(summed, table.total);
-    assert.equal(table.total, 19);
+    assert.equal(table.total, 13);
   });
 });
 

@@ -24,14 +24,16 @@ Everything below serves that.
 
 | Route | Purpose |
 | ----- | ------- |
-| `/` | War of Poker homepage. Leads with checkout, same order as `Pricing`: $39 Complete System, then the challenge to earn $29, then the $19 book. |
-| `/short-stack-plo` | The sales page. Primary CTA is checkout: $39 Complete System dominant, $19 book secondary, the challenge offered underneath as the way in for a reader who isn't ready. `?offer=player` shows the earned price. |
+| `/` | War of Poker homepage. Leads with checkout, same order as `Pricing`: $39 Complete System, then the challenge to unlock everything for $29, then one quiet line for the $25 book. |
+| `/short-stack-plo` | The sales page. Primary CTA is checkout: $39 Complete System dominant, the $29 Player Price beside it, and the $25 book, $19 Field Kit and $15 upgrade in a quiet row beneath. `?offer=player` shows the earned price. |
 | `/plo-challenge` | The free 10-Hand Short Stack PLO Challenge. **The primary acquisition asset.** |
 | `/plo-reality-check` | Permanent redirect to `/plo-challenge`, query string preserved (`next.config.mjs`). |
 | `/learn`, `/learn/[slug]` | Article index and template. |
 | `/river-potter` | Minimal author page. |
 | `/thank-you` | Post-purchase. Verifies payment with Stripe. |
-| `/downloads` | Purchaser's file list, gated by a signed token. |
+| `/downloads` | Purchaser's file list, gated by a signed token. A book-only token also offers the $15 Field Kit upgrade. |
+| `/upgrade` | Where a book owner's permanent upgrade link lands. Verifies the entitlement; grants no downloads. |
+| `/api/upgrade-links` | Operator only. Regenerates one customer's upgrade link(s) by `purchaseId` or `email` — never a bulk list. `no-store`. Sends nothing. |
 | `/growth` | Internal dashboard. Operator token only. |
 | `/contact`, `/privacy`, `/terms` | Pre-existing legal pages. |
 
@@ -84,8 +86,8 @@ acquisition asset. Content and social links point at it, and it is the CTA in
 **Both heroes now lead with checkout.** The homepage originally led with the
 challenge and kept the offer underneath; it was reversed under explicit
 direction, so `/` and `/short-stack-plo` present the same three steps in the
-same order — the Complete System at $39, the challenge as the way to earn $29,
-then the $19 book. Social and content traffic still lands on `/plo-challenge`
+same order — the Complete System at $39, the challenge as the way to unlock
+everything for $29, then the $25 book as a single quiet line. Social and content traffic still lands on `/plo-challenge`
 directly, which is where most of it goes.
 
 The trade is deliberate and worth restating: a visitor who was ready to pay $39
@@ -124,9 +126,33 @@ duplicated.
 | Scoring and diagnostic | [`src/lib/quiz/scoring.ts`](../src/lib/quiz/scoring.ts) |
 | State machine | [`src/components/quiz/challenge.tsx`](../src/components/quiz/challenge.tsx) |
 
-Every hand derives from the approved Short Stack PLO publication set, and
-`hands.ts` records the provenance of each one at the top of the file. Hands 1,
-6 and 8 are the three already published free and are transcribed verbatim.
+**Sourcing rule.** Challenge strategy principles must be grounded in the
+approved Short Stack PLO manuscript, but challenge hand examples must be
+original applications of those principles and should not reproduce paid-book
+or paid-Field-Kit worked examples. No challenge hand introduces doctrine that
+contradicts or extends beyond the book.
+
+This replaced the earlier rule that hands be staged from the book's own
+examples. The first version of the challenge did exactly that, and an audit on
+2026-09-21 found every one of its ten hands was paid inventory: Chapter 12
+worked hands, the book's example tables and review questions, or questions from
+the Field Kit's 20-Hand Capstone Quiz. All ten were replaced with original
+hands. A reader who takes the challenge and then buys should meet the book's
+worked hands for the first time.
+
+`tests/challenge-hands.test.ts` enforces both halves. It checks every hand's
+holding and flop against every card combination printed in the paid book and
+Capstone Quiz (`tests/paid-examples.fixture.ts`). It also recomputes each
+hand's card facts with a test-only Omaha evaluator
+(`tests/plo-eval.ts`, exactly two hole cards and three board cards): best
+hand, nut status, straight cards, and every equity quoted against a study
+holding.
+
+**The free 3-Hand Reality Check is deprecated.** Its three questions were
+Capstone Quiz questions (Hands 7, 8 and 11), so
+`FREE_3_HAND_PLO_QUIZ_RELEASE.md`, which lives outside this repository, should
+no longer be distributed now that the 10-Hand Challenge is the active funnel.
+`/plo-reality-check` already redirects to the challenge.
 
 **Progress survives a reload.** Answers are written to `sessionStorage` after
 each one. A returning run is *offered* rather than applied — reading storage
@@ -172,7 +198,8 @@ mount, so it means "saw the offer" and not "reached the results".
 - **Anonymous exits** — completions minus the two above.
 
 Which of the three prices a sale was made at is the `offer_id` on the purchase:
-`book` ($19), `system` ($39), `system-quiz` ($29). Completions count *runs*
+`book` ($25), `field-kit` ($19), `system` ($39), `system-quiz` ($29),
+`field-kit-upgrade` ($15). Completions count *runs*
 rather than people — one player taking the challenge twice completes twice — so
 the split is a shape, not a census. That is stated on the dashboard.
 
@@ -213,7 +240,26 @@ route handlers. Subscriber emails and purchase records never reach a browser.
   Supabase Storage bucket. A purchase mints an HMAC-signed token naming the
   product and an expiry; `/api/download/[assetId]` verifies it (constant-time)
   and refuses an asset outside that product, so a book-only token cannot reach a
-  Field Kit file.
+  Field Kit file, and a Field Kit-only token cannot reach the book.
+- **The $15 upgrade requires a book owner's upgrade entitlement.** Every paid
+  book purchase gets one, separate from its download link
+  (`src/lib/book-ownership.ts`). It is signed with the same HMAC-SHA256 scheme
+  as download tokens, under a key derived from `DELIVERY_SECRET` for this
+  purpose only, so neither token can pass as the other: an entitlement grants
+  no downloads, and a download token is not accepted at checkout. It carries
+  the purchase id and the `book` offer, and **no expiry**. Each use re-reads the
+  purchase and requires a paid, unrefunded `book` sale that has not already
+  been upgraded; the checkout is locked to that purchase's email. An email
+  address alone is never accepted.
+- **A full refund marks the purchase `refunded`.** The webhook handles
+  `charge.refunded` (full refunds only) by updating the row found by its
+  PaymentIntent; that revokes the entitlement. The Stripe webhook endpoint must
+  be subscribed to `charge.refunded` as well as `checkout.session.completed`.
+- **An upgrade is delivered only to the book buyer.** The webhook records and
+  delivers a `field-kit-upgrade` to the email on the original book purchase
+  (`purchases.upgrade_of`), and `/thank-you` never shows an upgrade's download
+  link. Someone holding a leaked upgrade link can at most pay $15 to send the
+  Field Kit to its rightful owner.
 - **Analytics never break the funnel.** A failed event is logged and swallowed.
   Losing an event is bad; losing a sale because the event log was down is worse.
 - **No third-party tracking scripts.** Events go to our own route. Nothing to
@@ -231,7 +277,7 @@ changing.
 | --- | ---- | ------- |
 | `welcome` | immediately | Your challenge results and PLO Survival Card |
 | `expensive-mistake` | day 1 | An overpair is a strong made hand (in the other game) |
-| `draw-quality` | day 3 | Clean outs, dirty outs, and the 22 that were really 19 |
+| `draw-quality` | day 3 | Clean outs, dirty outs, and the straight that loses |
 | `worked-hand` | day 5 | When the turn changes the board, start over |
 | `inside-the-system` | day 7 | What's inside the Complete System |
 | `offer-reminder` | day 10 | Your player price is still on |
@@ -249,9 +295,17 @@ the two offer-led steps for existing customers. Those two link to
 `?offer=player`: the challenge is the only way onto this list, so everyone
 receiving them earned that price.
 
-**Every strategic claim in these emails is drawn from the approved publication
-set** — the Survival Card's eight translation errors and the hands of the
-10-Hand Challenge. No new strategy is introduced in marketing copy.
+**Every strategic principle in these emails is drawn from the approved
+publication set** — the book and the Survival Card's eight translation errors.
+No new strategy is introduced in marketing copy.
+
+**Each layer of the funnel carries its own examples.** An email introduces an
+idea with a small example of its own; the 10-Hand Challenge tests it through a
+different situation; the book develops it with its worked hands; the Capstone
+Quiz tests it again with still different ones. The principle repeats across the
+funnel, the worked example does not. `draw-quality` and `worked-hand` were
+rewritten on that basis on 2026-09-21: they previously retaught two Capstone
+questions.
 
 ---
 
@@ -259,29 +313,58 @@ set** — the Survival Card's eight translation errors and the hands of the
 
 | Offer id | Product | Price | Notes |
 | -------- | ------- | ----- | ----- |
-| `book` | `book` | $19 | The strategy guide. Learn the method. |
-| `system` | `complete-system` | $39 | The guide plus the full Field Kit. Learn the method and apply it. |
-| `system-quiz` | `complete-system` | $29 | Player price, earned by finishing the challenge. `NEXT_PUBLIC_QUIZ_OFFER_CENTS`. |
+| `system` | `complete-system` | $39 | The main offer: the book plus the complete Field Kit. |
+| `system-quiz` | `complete-system` | $29 | Player Price, earned by finishing the challenge. `NEXT_PUBLIC_QUIZ_OFFER_CENTS`. |
+| `book` | `book` | $25 | The book alone, for a reader who wants to start there. |
+| `field-kit` | `field-kit` | $19 | The Field Kit alone. Available, never a headline CTA. |
+| `field-kit-upgrade` | `complete-system` | $15 | Book owners only, against the purchase's permanent upgrade entitlement. |
 
-**Two products, not a bundle and its parts.** The book teaches the method; the
-Complete System teaches it and supplies the tools for applying, studying and
-reviewing it. No surface breaks $39 into $19 plus a priced Field Kit, quotes a
-value for any individual piece, or totals a "worth". The $39 is what the package
-costs, and the difference between the two columns is what it does — the site
-does not invite the question "why do the worksheets cost more than the book?".
+Set under explicit direction on 2026-09-21, replacing the earlier $19 book /
+$39 system / $29 Player Price catalogue.
 
-**The player price is earned, not discounted stock.** It is presented as
-`Regular price $39 / Your player price $29`, never as a percentage, a promo
-code, a sale or a struck-through number. Its effect is that a challenge
-completer gets the whole system for $10 more than the standalone book — which is
-the acquisition offer, not a claim about what the Field Kit is worth.
+**The Complete System is now presented as a bundle with a visible saving.**
+This reverses the earlier rule that no surface broke the system's price into
+parts. Bought separately the book and the kit are $25 + $19 = $44
+(`SEPARATE_TOTAL_CENTS`), so the $39 system saves $5, and the sales page says
+so. A book-first buyer who later upgrades pays $25 + $15 = $40 — one dollar
+more than the system upfront. That gap is intentional.
 
-**The number is public.** `Pricing` gives $29 a column of its own, equal in size
-to the other two and second in reading order, and both heroes and `ChallengeCta`
-state it in figures rather than promising that "your player price is unlocked" —
-which told a first-time reader nothing and so gave them no reason to start.
-Naming it makes the challenge worth taking instead of worth skipping. None of
-those surfaces sells at $29: each one's call to action is the challenge. See
+**The upgrade entitles the buyer to `complete-system`**, not to `field-kit`, so
+the new download link carries the book they already own alongside the kit.
+Their original book link is untouched.
+
+**The upgrade stays available indefinitely.** The book purchase email carries
+a secondary "Want the Field Kit later?" link to `/upgrade`, beneath the download
+button; `/downloads` and `/thank-you` offer it too. Entitlements are
+deterministic, so when support needs one -- a book bought before entitlements
+existed, or a lost email -- it is regenerated from the purchase record with
+`GET /api/upgrade-links?email=…` or `?purchaseId=…` (operator bearer token).
+Exactly one of the two is required; the route returns only that customer's
+paid, unrefunded book purchases, marks any already upgraded, and sends nothing.
+
+**There is deliberately no bulk export.** An entitlement is a permanent signed
+bearer capability, so no request returns every customer's link at once, every
+response carries `Cache-Control: no-store`, and neither the query nor the links
+are written to application logs. There is no current need to email all
+historical book buyers; if that need arises, it should be a one-off job rather
+than an endpoint.
+
+Rotating `DELIVERY_SECRET` invalidates every entitlement along with every
+download link. After a rotation, links are regenerated per customer the same
+way, on request.
+
+**The hierarchy is two offers and a quiet row.** `Pricing` gives the Complete
+System and the Player Price a card each; the book, the Field Kit and the
+upgrade share one understated row beneath them so none competes with the main
+path. The hero states the system, then the Player Price, then one line for the
+book.
+
+**The Player Price is earned, not discounted stock.** It is presented as
+`Regular price $39 / Your Player Price $29`, never as a percentage, a promo
+code, a sale or a struck-through number. Every surface that promotes the
+challenge says what $29 buys — the book **and** the complete Field Kit, everything
+for $29, only $4 more than the book alone — so nobody has to work it out. None
+of those surfaces sells at $29: each one's call to action is the challenge. See
 § The 10-Hand Challenge for the trade that comes with it.
 
 `system-quiz` is a separate offer rather than a discount on `system` so
@@ -291,6 +374,11 @@ original name** although the 3-Hand Reality Check it referred to is gone: it is
 written into `purchases.offer_id`, into that column's check constraint, and into
 every historical sale. Renaming it would need a migration and would split the
 sales history — the same trade already made for the `quiz_*` event names.
+
+The two new offer ids and the `field-kit` product are admitted to the
+`purchases` check constraints, and `purchases.upgrade_of` is added, by
+`supabase/migrations/0003_pricing_architecture.sql`, which must run before
+deploy.
 
 **The unlock is presentation, not a security boundary.** `/api/checkout` takes
 an offer id and resolves the amount server-side, so nothing chargeable is

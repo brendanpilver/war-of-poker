@@ -3,8 +3,9 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PurchaseCompleted } from "@/components/analytics/purchase-completed";
+import { createUpgradeEntitlement, upgradeUrl } from "@/lib/book-ownership";
 import { assetsFor, createDeliveryToken, TOKEN_TTL_LABEL } from "@/lib/delivery";
-import { isOfferId, offers } from "@/lib/offers";
+import { formatPrice, isOfferId, offers } from "@/lib/offers";
 import { stripeClient } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase";
 import { legalContactEmail } from "@/lib/legal";
@@ -17,6 +18,11 @@ import { legalContactEmail } from "@/lib/legal";
  * reports `payment_status: "paid"`. The purchase record is written by the
  * webhook; this page reads it to mint a download token, and tolerates the
  * webhook not having landed yet.
+ *
+ * A book-owner upgrade is the exception: its links go only to the address that
+ * bought the book, by email, and are never shown here. Otherwise whoever held a
+ * book owner's upgrade link could pay $15 and collect the book and the Field
+ * Kit from this page.
  */
 
 export const metadata: Metadata = {
@@ -32,6 +38,11 @@ type VerifiedPurchase = {
   email: string | null;
   amountCents: number;
   offerId: string;
+  bookOnly: boolean;
+  /** Links go to the book buyer's address only; see the note above. */
+  deliveredToBookOwner: boolean;
+  /** The book purchase's permanent upgrade link, when it can be minted. */
+  upgradeHref: string | null;
 };
 
 async function verify(sessionId: string): Promise<VerifiedPurchase | null> {
@@ -56,15 +67,23 @@ async function verify(sessionId: string): Promise<VerifiedPurchase | null> {
       .eq("stripe_checkout_session_id", session.id)
       .maybeSingle()) ?? { data: null };
 
+    const bookOnly = offer.product === "book";
+    const entitlement =
+      bookOnly && purchase?.id ? createUpgradeEntitlement(purchase.id) : null;
+
     return {
       productName: offer.name,
       assetNames: assetsFor(offer.product).map((asset) => asset.name),
-      token: purchase?.id
-        ? createDeliveryToken({ purchaseId: purchase.id, product: offer.product })
-        : null,
-      email: session.customer_details?.email ?? null,
+      token:
+        purchase?.id && !offer.bookOwnerOnly
+          ? createDeliveryToken({ purchaseId: purchase.id, product: offer.product })
+          : null,
+      email: offer.bookOwnerOnly ? null : (session.customer_details?.email ?? null),
       amountCents: session.amount_total ?? offer.amountCents,
       offerId,
+      bookOnly,
+      deliveredToBookOwner: offer.bookOwnerOnly,
+      upgradeHref: entitlement ? upgradeUrl(entitlement) : null,
     };
   } catch {
     return null;
@@ -100,7 +119,10 @@ export default async function ThankYouPage({
                 Thank you. A confirmation with your download links is on its way
                 to{" "}
                 <span className="text-bone">
-                  {purchase.email ?? "the address you used at checkout"}
+                  {purchase.email ??
+                    (purchase.deliveredToBookOwner
+                      ? "the address you bought the book with"
+                      : "the address you used at checkout")}
                 </span>
                 .
               </p>
@@ -145,6 +167,29 @@ export default async function ThankYouPage({
                     {legalContactEmail}
                   </a>
                   .
+                </p>
+              )}
+
+              {purchase.bookOnly && (
+                <p className="mt-6 leading-relaxed text-pretty text-bone-muted">
+                  Want the Field Kit later? As a Short Stack PLO owner, you
+                  can add the complete Field Kit anytime for{" "}
+                  {formatPrice(offers["field-kit-upgrade"].amountCents)}
+                  {purchase.upgradeHref ? (
+                    <>
+                      :{" "}
+                      <a
+                        href={purchase.upgradeHref}
+                        className="text-bone underline decoration-bone/30 underline-offset-4 hover:decoration-gold"
+                      >
+                        add the Field Kit for{" "}
+                        {formatPrice(offers["field-kit-upgrade"].amountCents)}
+                      </a>
+                      .
+                    </>
+                  ) : (
+                    " — the link is in your purchase email."
+                  )}
                 </p>
               )}
 

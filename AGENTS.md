@@ -141,8 +141,9 @@ CONTENT -> QUIZ -> EMAIL -> PRODUCT PAGE -> PURCHASE -> DELIVERY -> ANALYTICS
   `/learn`, `/river-potter`, `/thank-you`, `/downloads`, and a token-gated
   `/growth` dashboard.
 - **Supabase** — subscribers, events, purchases, content pieces, email sends.
-- **Stripe Checkout** — the $19 book and the $39 Complete System, plus the $29
-  player price earned by finishing the 10-Hand Challenge.
+- **Stripe Checkout** — the $39 Complete System (book + Field Kit), the $29
+  Player Price earned by finishing the 10-Hand Challenge, the $25 book, the $19
+  Field Kit, and a $15 Field Kit upgrade sold only to verified book owners.
 - **Resend** — the challenge results email (score, concepts, Survival Card,
   player price) and the five-step sequence that follows it.
 - **First-party analytics** — content-ID attribution carried from a published

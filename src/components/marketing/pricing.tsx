@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { TrackedCta } from "@/components/analytics/tracked-cta";
 import { fieldKitCount } from "@/lib/field-kit";
-import { formatPrice, offers } from "@/lib/offers";
+import { formatPrice, offers, SEPARATE_TOTAL_CENTS } from "@/lib/offers";
 import { totalHands } from "@/lib/quiz/hands";
 import { CHALLENGE_PATH, shortStackPlo } from "@/lib/short-stack-plo";
 import { BuyOfferButton } from "./buy-offer-button";
@@ -9,24 +9,26 @@ import { PlayerPriceNotice } from "./player-price-notice";
 import { Section, SectionHeading } from "./section";
 
 /**
- * The three ways in, at equal size and in decision order: buy the system, earn
- * it cheaper, or buy the book.
+ * The pricing block, in the order of the hierarchy it has to make obvious:
  *
- * They are sold as different products, not as a bundle and its discount: the
- * book teaches the method, the Complete System teaches it and hands you the
- * tools for applying it. Nothing here breaks the system's price into parts or
- * quotes a value for the Field Kit — the $39 is what the package costs, and the
- * difference between the columns is what each one does.
+ * 1. **Complete System — $39.** The main offer: the book and the complete Field
+ *    Kit. Its card says what the two cost bought separately ($44).
+ * 2. **Player Price — $29.** The promotional path: finish the free challenge and
+ *    get the same book and complete Field Kit for $29. Its copy names both
+ *    products outright so nobody has to work out what $29 buys.
+ * 3. **Everything else, quietly.** Book only ($25), the Field Kit only ($19),
+ *    and the $15 upgrade for book owners sit in one understated row beneath
+ *    the two cards, so none of them competes with the main path.
  *
- * **The middle column sells the challenge, not a cheaper checkout.** It carries
- * no buy button, because $29 is earned by finishing the challenge and a buy
- * button at that price for every visitor would retire the thing it rewards. The
- * price is named in figures all the same: withholding it meant nobody could
- * tell what finishing was worth, and "your player price is unlocked" is not an
- * offer to anyone reading it for the first time.
+ * **The Player Price card sells the challenge, not a cheaper checkout.** It
+ * carries no buy button, because $29 is earned by finishing the challenge and a
+ * buy button at that price for every visitor would retire the thing it rewards.
+ * There is no countdown and no scarcity is implied anywhere.
  *
- * Book Only is a full, plainly described choice with its own real button and
- * its own price. There is no countdown and no scarcity is implied anywhere.
+ * The upgrade has no button here. It is sold only against proof of owning the
+ * book -- the permanent upgrade link in the book purchase email -- so this
+ * block points to that link, and the button lives on `/upgrade` and
+ * `/downloads`.
  *
  * `PlayerPriceNotice` is separate and conditional: a completer who asked for
  * their results by email arrives back through a link carrying `?offer=player`,
@@ -42,17 +44,12 @@ const systemIncludes = [
 ];
 
 const playerIncludes = [
-  `Everything in the Complete System`,
-  `${totalHands} live PLO decisions, worked`,
-  "No email needed to see the answers",
-];
-
-const bookIncludes = [
   `The complete ${shortStackPlo.title} book`,
-  "Fully worked example hands",
+  `The complete Field Kit — all ${fieldKitCount} tools`,
+  `Only ${formatPrice(offers["system-quiz"].amountCents - offers.book.amountCents)} more than the book alone`,
 ];
 
-/** One column. Every card is the same size; only the accent and button differ. */
+/** One card. Both are the same size; only the copy and button differ. */
 function Option({
   eyebrow,
   title,
@@ -60,7 +57,6 @@ function Option({
   priceNote,
   description,
   includes,
-  accent,
   action,
   footnote,
 }: {
@@ -70,21 +66,12 @@ function Option({
   priceNote?: string;
   description: string;
   includes: string[];
-  accent: "primary" | "earn" | "quiet";
   action: React.ReactNode;
   footnote: string;
 }) {
-  const rule =
-    accent === "quiet" ? "border-t border-line" : "border-t-2 border-gold";
-  const eyebrowTone = accent === "quiet" ? "text-bone-faint" : "text-gold";
-  const bulletTone = accent === "quiet" ? "text-bone-faint" : "text-gold";
-  const itemTone = accent === "quiet" ? "text-bone-muted" : "text-bone";
-
   return (
-    <div className={`flex flex-col ${rule} bg-ink-card p-6 sm:p-8`}>
-      <p
-        className={`font-mono text-[11px] tracking-[0.18em] uppercase ${eyebrowTone}`}
-      >
+    <div className="flex flex-col border-t-2 border-gold bg-ink-card p-6 sm:p-8">
+      <p className="font-mono text-[11px] tracking-[0.18em] text-gold uppercase">
         {eyebrow}
       </p>
       <h3 className="mt-3 text-2xl font-bold text-bone uppercase">{title}</h3>
@@ -102,9 +89,9 @@ function Option({
         {includes.map((item) => (
           <li
             key={item}
-            className={`flex gap-3 leading-snug text-pretty ${itemTone}`}
+            className="flex gap-3 leading-snug text-pretty text-bone"
           >
-            <span aria-hidden className={bulletTone}>
+            <span aria-hidden className="text-gold">
               —
             </span>
             {item}
@@ -112,8 +99,8 @@ function Option({
         ))}
       </ul>
 
-      {/* Pushed to the bottom so the three buttons line up however much copy
-          each column carries. */}
+      {/* Pushed to the bottom so the two buttons line up however much copy
+          each card carries. */}
       <div className="mt-8 flex flex-col pt-0 md:mt-auto md:pt-8">
         {action}
         <p className="mt-4 text-sm text-bone-faint">{footnote}</p>
@@ -125,6 +112,8 @@ function Option({
 export function Pricing() {
   const system = offers.system;
   const book = offers.book;
+  const fieldKit = offers["field-kit"];
+  const upgrade = offers["field-kit-upgrade"];
   const player = offers["system-quiz"];
   const access = `${shortStackPlo.format} · ${shortStackPlo.access}`;
 
@@ -139,27 +128,24 @@ export function Pricing() {
       </Suspense>
 
       <SectionHeading id="pricing-title" eyebrow="Pricing">
-        Three ways in.
+        The Complete System, two ways.
       </SectionHeading>
 
-      <div className="mt-10 grid items-stretch gap-6 md:grid-cols-3">
+      <div className="mt-10 grid items-stretch gap-6 md:grid-cols-2">
         <Option
           eyebrow="Learn it and apply it"
           title="Complete System"
           price={formatPrice(system.amountCents)}
+          priceNote={`${formatPrice(SEPARATE_TOTAL_CENTS)} bought separately`}
           description={system.description}
           includes={systemIncludes}
-          accent="primary"
           footnote={access}
           action={
             <BuyOfferButton
               offerId="system"
               location="pricing"
               className="w-full"
-              // "Get the Complete System — $39" is wider than this column: the
-              // button does not wrap, so the longest label a card can hold is
-              // the product and its price.
-              label={`Complete System — ${formatPrice(system.amountCents)}`}
+              label={`Get the Complete System — ${formatPrice(system.amountCents)}`}
             />
           }
         />
@@ -169,9 +155,8 @@ export function Pricing() {
           title="Player Price"
           price={formatPrice(player.amountCents)}
           priceNote={`instead of ${formatPrice(system.amountCents)}`}
-          description={`Finish the free ${totalHands}-Hand Challenge and the same Complete System is yours at your player price.`}
+          description={`Take the free ${totalHands}-Hand Challenge and unlock the complete ${formatPrice(system.amountCents)} system for ${formatPrice(player.amountCents)}. Everything for ${formatPrice(player.amountCents)}: the book and the complete Field Kit, not a discount on one of them.`}
           includes={playerIncludes}
-          accent="earn"
           footnote="Free to take · Instant results"
           action={
             <TrackedCta
@@ -184,25 +169,49 @@ export function Pricing() {
             </TrackedCta>
           }
         />
+      </div>
 
-        <Option
-          eyebrow="Learn the method"
-          title="Book Only"
-          price={formatPrice(book.amountCents)}
-          description={book.description}
-          includes={bookIncludes}
-          accent="quiet"
-          footnote={access}
-          action={
-            <BuyOfferButton
-              offerId="book"
-              location="pricing"
-              variant="secondary"
-              className="w-full"
-              label={`Get the Book — ${formatPrice(book.amountCents)}`}
-            />
-          }
-        />
+      {/* The secondary options: present and buyable, but one quiet row rather
+          than cards that compete with the two above. */}
+      <div className="mt-8 grid gap-6 border-t border-line pt-8 md:grid-cols-3">
+        <div>
+          <p className="text-bone">
+            Prefer to start with the book? Get {shortStackPlo.title} for{" "}
+            {formatPrice(book.amountCents)}.
+          </p>
+          <p className="mt-1.5 text-sm text-bone-faint">{book.description}</p>
+          <BuyOfferButton
+            offerId="book"
+            location="pricing"
+            variant="secondary"
+            className="mt-4 w-full sm:w-auto"
+            label={`Get the Book — ${formatPrice(book.amountCents)}`}
+          />
+        </div>
+        <div>
+          <p className="text-bone">
+            Just the tools? The Field Kit on its own is{" "}
+            {formatPrice(fieldKit.amountCents)}.
+          </p>
+          <p className="mt-1.5 text-sm text-bone-faint">{fieldKit.description}</p>
+          <BuyOfferButton
+            offerId="field-kit"
+            location="pricing"
+            variant="secondary"
+            className="mt-4 w-full sm:w-auto"
+            label={`Get the Field Kit — ${formatPrice(fieldKit.amountCents)}`}
+          />
+        </div>
+        <div>
+          <p className="text-bone">
+            Already own the book? Add the complete Field Kit for{" "}
+            {formatPrice(upgrade.amountCents)}.
+          </p>
+          <p className="mt-1.5 text-sm text-bone-faint">
+            Use the upgrade link in your book purchase email — it doesn&apos;t
+            expire.
+          </p>
+        </div>
       </div>
     </Section>
   );

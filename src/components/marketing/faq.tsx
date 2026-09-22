@@ -1,4 +1,5 @@
-import { formatPrice, offers } from "@/lib/offers";
+import { formatPrice, offers, SEPARATE_TOTAL_CENTS } from "@/lib/offers";
+import { totalHands } from "@/lib/quiz/hands";
 import { Section, SectionHeading } from "./section";
 
 const faqs = [
@@ -34,7 +35,15 @@ const faqs = [
   },
   {
     question: "What do I get?",
-    answer: `Two options. Short Stack PLO on its own is ${formatPrice(offers.book.amountCents)} — the strategy guide, for learning the method. The Complete System is ${formatPrice(offers.system.amountCents)} — the same guide plus the full seven-piece Field Kit, including the 20-Hand Capstone Quiz, for applying it at the table and reviewing it afterwards. Both are digital downloads with immediate access.`,
+    answer: `The Complete System is ${formatPrice(offers.system.amountCents)}: the Short Stack PLO book plus the complete seven-piece Field Kit, including the 20-Hand Capstone Quiz, for applying the method at the table and reviewing it afterwards. Bought separately the two would be ${formatPrice(SEPARATE_TOTAL_CENTS)}. Everything is a digital download with immediate access.`,
+  },
+  {
+    question: "How do I get the Player Price?",
+    answer: `Take the free ${totalHands}-Hand Challenge and unlock the complete ${formatPrice(offers.system.amountCents)} system for ${formatPrice(offers["system-quiz"].amountCents)}. That is the book and the complete Field Kit — everything, not a discount on one part — for only ${formatPrice(offers["system-quiz"].amountCents - offers.book.amountCents)} more than the book alone.`,
+  },
+  {
+    question: "Can I buy the book or the Field Kit on its own?",
+    answer: `Yes. The book alone is ${formatPrice(offers.book.amountCents)}, and the Field Kit alone is ${formatPrice(offers["field-kit"].amountCents)}. If you start with the book, you can add the complete Field Kit later for ${formatPrice(offers["field-kit-upgrade"].amountCents)} with the upgrade link in your purchase email — it doesn’t expire.`,
   },
 ];
 

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { FieldKitUpgrade } from "@/components/marketing/field-kit-upgrade";
+import { createUpgradeEntitlement } from "@/lib/book-ownership";
 import { assetsFor, TOKEN_TTL_LABEL, verifyDeliveryToken } from "@/lib/delivery";
 import { legalContactEmail } from "@/lib/legal";
 
@@ -11,6 +13,12 @@ import { legalContactEmail } from "@/lib/legal";
  * Access is the signed token alone -- there are no accounts. The token is
  * verified here to decide what to render, and again by the download route
  * before any file is signed for, so this page cannot be the only gate.
+ *
+ * A book-only link also offers the Field Kit upgrade. The download token
+ * proves which book purchase this is, so the page mints that purchase's upgrade
+ * entitlement for the button -- the same one its purchase email carries. The
+ * download token itself is never accepted as proof by checkout. See
+ * `src/lib/book-ownership.ts`.
  */
 
 export const metadata: Metadata = {
@@ -26,6 +34,8 @@ export default async function DownloadsPage({
   const raw = params.token;
   const token = typeof raw === "string" ? raw : null;
   const payload = verifyDeliveryToken(token);
+  const upgradeEntitlement =
+    payload?.product === "book" ? createUpgradeEntitlement(payload.purchaseId) : null;
 
   return (
     <>
@@ -64,6 +74,15 @@ export default async function DownloadsPage({
                   </li>
                 ))}
               </ul>
+
+              {upgradeEntitlement && (
+                <div className="mt-10">
+                  <FieldKitUpgrade
+                    entitlement={upgradeEntitlement}
+                    location="downloads-upgrade"
+                  />
+                </div>
+              )}
 
               <p className="mt-8 text-sm text-bone-faint">
                 Trouble with a file? Contact{" "}

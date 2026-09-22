@@ -87,6 +87,18 @@ describe("product assets", () => {
     assert.equal(delivery.assetsFor("complete-system").length, 8);
   });
 
+  it("gives the Field Kit buyer the seven pieces and not the book", () => {
+    const assets = delivery.assetsFor("field-kit");
+    assert.equal(assets.length, 7);
+    assert.equal(delivery.findAsset("field-kit", "book"), null);
+    assert.ok(delivery.findAsset("field-kit", "field-kit-07"));
+  });
+
+  it("round-trips a Field Kit token", () => {
+    const token = delivery.createDeliveryToken({ purchaseId: "p-9", product: "field-kit" });
+    assert.equal(delivery.verifyDeliveryToken(token)?.product, "field-kit");
+  });
+
   it("does not resolve a Field Kit asset for a book-only purchase", () => {
     assert.equal(delivery.findAsset("book", "field-kit-07"), null);
     assert.ok(delivery.findAsset("complete-system", "field-kit-07"));
@@ -95,5 +107,25 @@ describe("product assets", () => {
   it("uses a distinct object path for every asset", () => {
     const paths = delivery.assetsFor("complete-system").map((a) => a.objectPath);
     assert.equal(new Set(paths).size, paths.length);
+  });
+});
+
+describe("entitlements by offer", () => {
+  it("delivers what each of the five offers promises", async () => {
+    const { offers } = await import("../src/lib/offers");
+    const ids = (offerId: keyof typeof offers) =>
+      delivery.assetsFor(offers[offerId].product).map((asset) => asset.id);
+    const kit = delivery.assetsFor("field-kit").map((asset) => asset.id);
+
+    // $39 Complete System and the $29 Player Price: book and the whole kit.
+    assert.deepEqual(ids("system"), ["book", ...kit]);
+    assert.deepEqual(ids("system-quiz"), ["book", ...kit]);
+    // $25 book: the book only.
+    assert.deepEqual(ids("book"), ["book"]);
+    // $19 Field Kit: the kit only.
+    assert.deepEqual(ids("field-kit"), kit);
+    // $15 upgrade: the kit, with the book the buyer already owns kept on the
+    // same download link.
+    assert.deepEqual(ids("field-kit-upgrade"), ["book", ...kit]);
   });
 });
