@@ -5,10 +5,16 @@ import { siteUrl } from "@/lib/site";
 /**
  * The email sequence.
  *
- * Every strategic claim below is drawn from the approved Short Stack PLO
- * publication set -- the Survival Card's eight Hold'em-to-PLO translation
- * errors and the hands of the 10-Hand Challenge. Nothing here introduces
- * strategy that is not already in that material.
+ * Every strategic principle below is drawn from the approved Short Stack PLO
+ * publication set -- the book, and the Survival Card's eight Hold'em-to-PLO
+ * translation errors. Nothing here introduces strategy that is not already in
+ * that material.
+ *
+ * The worked examples are original and deliberately distinct: an email
+ * introduces an idea with a small example of its own, the 10-Hand Challenge
+ * tests it through a different situation, and the book and the Field Kit's
+ * Capstone Quiz develop it with their own. Do not reuse a challenge hand, a
+ * book worked hand, or a Capstone question here.
  *
  * Email 0 is transactional and sends the moment an address is captured. It is
  * the retention half of the results screen: a reader who was not ready to buy
@@ -166,7 +172,7 @@ export const sequence: {
         { kind: "h", text: "The clearest example" },
         {
           kind: "p",
-          text: "In Hold'em, an overpair is a strong made hand. In PLO, bare aces on 9-8-6 have to fold to real action — against a range full of rundowns and suited connectors, they are behind the straights, sets and big wraps that just connected.",
+          text: "In Hold'em, an overpair is a strong made hand. In PLO, A♥A♦Q♣2♠ on 7♥6♥4♣ is one pair and little else: a single heart makes no flush draw, and the queen and deuce connect with nothing. Against heavy action at a meaningful SPR, it can quickly become a fold — 8-5 and 5-3 already make straights, sets are ahead, and the biggest draws, such as a wrap with a heart draw, can even be favourites over one pair.",
         },
         {
           kind: "p",
@@ -189,19 +195,23 @@ export const sequence: {
     key: "draw-quality",
     delayDays: 3,
     content: {
-      subject: "Clean outs, dirty outs, and the 22 that were really 19",
+      subject: "Clean outs, dirty outs, and the straight that loses",
       blocks: [
         {
           kind: "p",
-          text: "Hand 6 of the challenge is the one most people get wrong, and it is worth sitting with.",
+          text: "Counting outs is the part of drawing everyone already does. Grading them is the part that decides whether you win.",
         },
         {
           kind: "p",
-          text: "K♠Q♠J♦9♦ on T♠8♠3♥ looks like 13 straight cards plus 9 spades — 22 outs. It isn't. That count uses 7♠, 9♠ and J♠ twice. They are one physical card each. Overlapping improvement labels never create extra outs.",
+          text: "Take a small one. You hold K♣Q♦6♥5♥ and the flop is 8♠7♠2♦. Any four or any nine gives you a straight — eight cards. In Hold'em you'd call that eight outs and move on.",
         },
         {
           kind: "p",
-          text: "The honest count is 19 unique cards. Then grade them: 10 non-spade straight cards and the A♠ make the current nuts; the other eight spades give you a flush that can already be beaten by an A♠ holding — which is exactly what a betting range contains.",
+          text: "Now grade them. The 4♥, 4♦ and 4♣ make 8-7-6-5-4, the best straight on that board: clean. The 4♠ makes the same straight but puts a third spade out, so any two spades beat you. And every nine makes 9-8-7-6-5 — the bottom of a board where T-6 and J-T make bigger straights. You'd be completing your draw into someone else's better hand.",
+        },
+        {
+          kind: "p",
+          text: "Eight cards that make a straight. Three that make the best hand without a catch.",
         },
         { kind: "h", text: "Two steps, not one" },
         {
@@ -213,12 +223,12 @@ export const sequence: {
         },
         {
           kind: "p",
-          text: "Then price it. $60 into $123 makes a final pot of $243, so the call needs 24.7% — and a non-all-in call buys you one turn decision, not the river. The rule of four prices two cards when you are buying one.",
+          text: "Then price it: what you owe, divided by the final pot. A call that isn't all-in buys one card, not two — the rule of four prices two cards when you are buying one.",
         },
         { kind: "p", text: signature },
       ],
       cta: {
-        label: "See the full out count",
+        label: "Count one yourself",
         href: link("/plo-challenge", "draw-quality"),
       },
     },
@@ -231,40 +241,40 @@ export const sequence: {
       blocks: [
         {
           kind: "p",
-          text: "Here is Hand 8 of the challenge worked through the four questions the whole system runs on: Hand · SPR · Equity · Player.",
+          text: "A short hand, worked through the four questions the whole system runs on: Hand · SPR · Equity · Player.",
         },
         {
           kind: "p",
-          text: "You hold J♦T♦7♣6♠ on 9♠8♥2♦. You called a $100 flop lead. The turn is the 8♣ and the cutoff shoves $142 into $323.",
+          text: "You hold Q♦J♣7♥3♠. The flop is Q♠J♥4♦: top two pair, and on that flop only a set beats you. You bet and get called. The turn is the T♠.",
         },
         { kind: "h", text: "Hand" },
         {
           kind: "p",
-          text: "A big wrap on the flop. After the 8♣, still twenty straight completions — and that is the trap, because completions are not winners.",
+          text: "Still queens and jacks. Nothing about your cards changed — and that is the trap, because the board did. A-K, K-9 and 9-8 now make straights, and the T♠ put a second spade out.",
         },
         { kind: "h", text: "SPR" },
         {
           kind: "p",
-          text: "Irrelevant to whether you are ahead. It tells you the decision is for the rest of the money, nothing more.",
+          text: "It tells you how much is left to play for. It doesn't tell you whether you are still ahead.",
         },
         { kind: "h", text: "Equity" },
         {
           kind: "p",
-          text: "The 8♣ pairs the board. Flopped 99xx and 22xx are now full houses, 88xx is quads, and 98xx is a full house. Against those hands, none of your twenty straight cards win. Not some. None.",
+          text: "On the flop your two pair was ahead of almost everything that could call. On this turn it trails every straight, and only the four remaining queens and jacks fill it up to a full house.",
         },
         { kind: "h", text: "Player" },
         {
           kind: "p",
-          text: "This cutoff leads flops with sets and two pair more often than with draws. That is precisely the range the turn just promoted.",
+          text: "Ask what called the flop. Hands like A-K, K-9 and 9-8 had gutshots and wraps on Q-J-4, and the ten is the card they were waiting for. A player who calls flops with draws and now bets big is telling you which part of that range arrived.",
         },
         {
           kind: "p",
-          text: "The price is genuinely fine — you need 23.4%. You fold anyway, because the equity died, not because the price is bad. Paying a turn price with flop equity is the classic error: the number was computed against a board that no longer exists.",
+          text: "The flop assessment was right. It just belongs to a board that no longer exists. Every new card, run the four questions again.",
         },
         { kind: "p", text: signature },
       ],
       cta: {
-        label: "Work the hand yourself",
+        label: "Take the 10-Hand Challenge",
         href: link("/plo-challenge", "worked-hand"),
       },
     },

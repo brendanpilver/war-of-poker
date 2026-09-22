@@ -126,9 +126,33 @@ duplicated.
 | Scoring and diagnostic | [`src/lib/quiz/scoring.ts`](../src/lib/quiz/scoring.ts) |
 | State machine | [`src/components/quiz/challenge.tsx`](../src/components/quiz/challenge.tsx) |
 
-Every hand derives from the approved Short Stack PLO publication set, and
-`hands.ts` records the provenance of each one at the top of the file. Hands 1,
-6 and 8 are the three already published free and are transcribed verbatim.
+**Sourcing rule.** Challenge strategy principles must be grounded in the
+approved Short Stack PLO manuscript, but challenge hand examples must be
+original applications of those principles and should not reproduce paid-book
+or paid-Field-Kit worked examples. No challenge hand introduces doctrine that
+contradicts or extends beyond the book.
+
+This replaced the earlier rule that hands be staged from the book's own
+examples. The first version of the challenge did exactly that, and an audit on
+2026-09-21 found every one of its ten hands was paid inventory: Chapter 12
+worked hands, the book's example tables and review questions, or questions from
+the Field Kit's 20-Hand Capstone Quiz. All ten were replaced with original
+hands. A reader who takes the challenge and then buys should meet the book's
+worked hands for the first time.
+
+`tests/challenge-hands.test.ts` enforces both halves. It checks every hand's
+holding and flop against every card combination printed in the paid book and
+Capstone Quiz (`tests/paid-examples.fixture.ts`). It also recomputes each
+hand's card facts with a test-only Omaha evaluator
+(`tests/plo-eval.ts`, exactly two hole cards and three board cards): best
+hand, nut status, straight cards, and every equity quoted against a study
+holding.
+
+**The free 3-Hand Reality Check is deprecated.** Its three questions were
+Capstone Quiz questions (Hands 7, 8 and 11), so
+`FREE_3_HAND_PLO_QUIZ_RELEASE.md`, which lives outside this repository, should
+no longer be distributed now that the 10-Hand Challenge is the active funnel.
+`/plo-reality-check` already redirects to the challenge.
 
 **Progress survives a reload.** Answers are written to `sessionStorage` after
 each one. A returning run is *offered* rather than applied — reading storage
@@ -253,7 +277,7 @@ changing.
 | --- | ---- | ------- |
 | `welcome` | immediately | Your challenge results and PLO Survival Card |
 | `expensive-mistake` | day 1 | An overpair is a strong made hand (in the other game) |
-| `draw-quality` | day 3 | Clean outs, dirty outs, and the 22 that were really 19 |
+| `draw-quality` | day 3 | Clean outs, dirty outs, and the straight that loses |
 | `worked-hand` | day 5 | When the turn changes the board, start over |
 | `inside-the-system` | day 7 | What's inside the Complete System |
 | `offer-reminder` | day 10 | Your player price is still on |
@@ -271,9 +295,17 @@ the two offer-led steps for existing customers. Those two link to
 `?offer=player`: the challenge is the only way onto this list, so everyone
 receiving them earned that price.
 
-**Every strategic claim in these emails is drawn from the approved publication
-set** — the Survival Card's eight translation errors and the hands of the
-10-Hand Challenge. No new strategy is introduced in marketing copy.
+**Every strategic principle in these emails is drawn from the approved
+publication set** — the book and the Survival Card's eight translation errors.
+No new strategy is introduced in marketing copy.
+
+**Each layer of the funnel carries its own examples.** An email introduces an
+idea with a small example of its own; the 10-Hand Challenge tests it through a
+different situation; the book develops it with its worked hands; the Capstone
+Quiz tests it again with still different ones. The principle repeats across the
+funnel, the worked example does not. `draw-quality` and `worked-hand` were
+rewritten on that basis on 2026-09-21: they previously retaught two Capstone
+questions.
 
 ---
 

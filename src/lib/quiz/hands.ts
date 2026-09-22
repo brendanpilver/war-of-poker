@@ -4,31 +4,26 @@ import type { ConceptId } from "./concepts";
 /**
  * The 10-Hand Short Stack PLO Challenge.
  *
- * Every hand below is drawn from the approved Short Stack PLO publication set
- * (River Potter / War of Poker). No new strategy is written here. Provenance,
- * hand by hand:
+ * **Sourcing rule.** Challenge strategy principles must be grounded in the
+ * approved Short Stack PLO manuscript, but challenge hand examples must be
+ * original applications of those principles and should not reproduce
+ * paid-book or paid-Field-Kit worked examples. Nothing here introduces
+ * strategy doctrine that contradicts or extends beyond the book.
  *
- *   1  FREE_3_HAND_PLO_QUIZ_RELEASE.md, Question 1 (verbatim)
- *   2  Field Kit 02, Part 1 "Six checks" + Part 2 "Opening by seat" / Ch. 3-4
- *   3  Ch. 12, "The Permanent Straddle Changes the Strategy" / Ch. 11
- *   4  Ch. 12, "Premium Structure Against Loose Callers" / Ch. 5
- *   5  Ch. 12, "The Dominated Flush Draw" / Field Kit 03, Side B-C
- *   6  FREE_3_HAND_PLO_QUIZ_RELEASE.md, Question 2 (verbatim)
- *   7  Published edition p. 57, worked Hand 7 / Ch. 5, Ch. 8
- *   8  FREE_3_HAND_PLO_QUIZ_RELEASE.md, Question 3 (verbatim)
- *   9  Published edition p. 59, worked Hand 9 / Ch. 9 / Field Kit 04
- *  10  Ch. 12, "A Full System Hand"
+ * The paid product's worked hands -- the book's Chapter 12, its example
+ * tables and review questions, and the Field Kit's 20-Hand Capstone Quiz --
+ * are premium inventory. No hand below reuses their cards, boards, action
+ * sequences or teaching reveal, and none of them should be introduced here.
+ * The retired free 3-Hand Reality Check is not a source either: its three
+ * questions were Capstone questions.
  *
- * Hands 1, 6 and 8 are the three already published free; their wording,
- * options, answers and figures are the release document's and are not edited
- * here. The rest are staged from the book's own worked hands: the cards,
- * boards, figures and reasoning are the source's, and only the framing around
- * them -- the question asked, the wrong options, the order -- is written for
- * this format. If a hand needs to change strategically, it changes in the
- * source material first.
+ * Every hand was checked with an Omaha evaluator that builds each hand from
+ * exactly two hole cards and exactly three board cards. Equities quoted
+ * against a "study holding" are exact enumerations against that one fully
+ * specified hand, the same convention the book uses; nobody knows those
+ * cards at the table.
  *
- * `principle` is the one line the reader should leave with. Each is the
- * source's own, quoted or condensed, never invented.
+ * `principle` is the one line the reader should leave with.
  */
 
 export type ChoiceId = "A" | "B" | "C" | "D";
@@ -95,472 +90,502 @@ export const challengeIntro = {
   byline: "River Potter · PLO Specialist, War of Poker",
   body: [
     "You know how to play poker. That's not the problem. The problem is that four hole cards change the inputs, and accurate Hold'em instincts start producing wrong answers.",
-    "Ten hands from the Short Stack PLO system. Pick an answer, then read the working — it comes after every hand, and none of it is held back for an email address.",
+    "Ten original hands built on the Short Stack PLO system. Pick an answer, then read the working — it comes after every hand, and none of it is held back for an email address.",
   ],
 };
 
 export const hands: ChallengeHand[] = [
   {
-    id: "aces-on-a-rundown-board",
+    id: "you-hold-the-ten",
     number: 1,
     concept: "nlh-instinct",
-    title: "Your aces meet a rundown board",
+    title: "You hold the ten",
     setup: [
-      "The cutoff has shown down rundowns and suited connectors after calling 3-bets.",
-      "The cutoff opens $17, you 3-bet the button to $58, the blinds fold, and the cutoff calls. On the flop, the cutoff checks.",
+      "The cutoff opens $17 and you call on the button with Q♥Q♣T♦3♠. The blinds fold.",
+      "The flop 9♣7♠2♣ checks through. On the 8♦ turn the cutoff bets $30 and you call. The river is the 6♥, and the cutoff bets the pot.",
     ],
-    hand: cards("Ah Ac Ks 3d"),
-    board: cards("9h 8h 6c"),
+    hand: cards("Qh Qc Td 3s"),
+    board: cards("9c 7s 2c 8d 6h"),
+    boardStreetBreaks: [3, 4],
+    boardLabel: "Board · final",
     facts: [
       { label: "Position", value: "Button vs cutoff" },
-      { label: "Pot", value: "$123" },
-      { label: "Behind", value: "$242" },
-      {
-        label: "Read",
-        value: "Rundowns and suited connectors after calling 3-bets",
-        wide: true,
-      },
+      { label: "Pot", value: "$101" },
+      { label: "They bet", value: "$101" },
+      { label: "Behind", value: "$253" },
     ],
-    prompt: "What do you do, and why?",
+    prompt: "The board reads 9-8-7-6 and you hold a ten. What do you do?",
     choices: [
       {
         id: "A",
-        text: "Bet $123. You're the preflop raiser, and an SPR under 3 means you're committed.",
+        text: "Raise all-in. The ten gives you the top of the straight.",
       },
       {
         id: "B",
-        text: "Check back. The board hits the caller's range, and a bet mostly folds hands with little equity while getting raised by hands that crush bare aces.",
+        text: "Call. You have a ten-high straight, and they could be betting a smaller one.",
       },
       {
         id: "C",
-        text: "Bet $123 and call a check-raise all-in, since you've already put in $58.",
+        text: "Fold. You don't have a straight. PLO plays exactly two hole cards, and your ten has no partner among 9-8-7-6 — your hand is a pair of queens.",
       },
-      { id: "D", text: "Bet $60 to find out where you stand." },
+      {
+        id: "D",
+        text: "Call. Queens are an overpair, and overpairs beat the two pair they bet here.",
+      },
     ],
-    correctChoiceId: "B",
-    answerHeadline: "B — check back.",
+    correctChoiceId: "C",
+    answerHeadline: "C — fold. You're holding one pair, not a straight.",
     explanation: [
-      "Bare aces with no heart and no useful straight coverage. The current nuts is T7, and 75 also makes a straight. This caller's range is full of exactly the rundowns and suited connectors that just connected with 9-8-6.",
-      "Your preflop range advantage is not a flop advantage on this board. A bet folds the hands with little equity and gets action from the straights, sets and big wraps that have you crushed.",
-      "SPR 1.97 describes the leverage available. It does not describe your cards, and it is not an instruction to commit. On A♦7♠2♣ the same aces bet comfortably.",
+      "In Hold'em the T♦ plus 9-8-7-6 on the board is a straight. In PLO a hand is always exactly two of your cards and exactly three from the board. Point to the two: the ten needs a second card from J, 9, 8, 7 or 6 alongside it, and you hold queens and a three. Your best hand is Q♥Q♣ with 9-8-7 — one pair.",
+      "Now read the board for them rather than for you. Any ten with a 9, 8, 7 or 6 makes a ten-high straight, J-T makes a jack-high one, and 6-5, 7-5, 8-5, 9-5 and 5-4 make lower ones. A pot-sized river bet after a turn bet, on a board this connected, is where those hands live.",
+      "The price is $101 into a final $303: 33.3%. A pair of queens would need a third of this range to be bluffs, and on four to a straight it isn't close.",
+      "D is the second Hold'em habit in the same hand: an overpair is a strong made hand there. Here, even before counting straights, it is a bluff-catcher on a board that has handed out every straight in the deck.",
     ],
-    principle: "Checking is not surrender. If you can't name what a bet earns, don't bet.",
+    principle: "Point to the two cards in your hand. If you can't, you don't have it.",
   },
   {
-    id: "which-hand-opens",
+    id: "which-hand-wants-the-crowd",
     number: 2,
     concept: "preflop-structure",
-    title: "Which hand opens?",
+    title: "Which hand wants the crowd?",
     setup: [
-      "Nothing has happened yet. You're under the gun in an eight-handed game, $300 effective, and a pot-sized open is $17.",
-      "Four holdings. One of them is the clearest open of the four.",
+      "It's a loose table. Most flops tonight have been seen five-way, and nobody is raising enough to change that.",
+      "Four holdings. Each looks playable. One of them gets better, not worse, as more players see the flop.",
     ],
     hand: [],
     board: [],
     facts: [
-      { label: "Position", value: "Under the gun" },
-      { label: "Effective", value: "$300 · 60 BB" },
-      { label: "Action", value: "Folded to you" },
+      { label: "Game", value: "$2/$5 · $300 effective" },
+      { label: "Typical flop", value: "Five players" },
     ],
-    prompt: "Which holding is the clearest open to $17?",
+    prompt: "Which holding gains the most from a five-way pot?",
     choices: [
       {
         id: "A",
-        text: "Two premium Hold'em cards, rainbow.",
-        cards: cards("As Kd 8h 3c"),
+        text: "The nut suit, with four connected high cards.",
+        cards: cards("Ah Qh Jc Tc"),
       },
       {
         id: "B",
-        text: "Four connected high cards, two suits.",
-        cards: cards("Ks Qs Jh Th"),
+        text: "A double-suited rundown.",
+        cards: cards("8c 7c 6h 5h"),
       },
-      { id: "C", text: "Double-suited.", cards: cards("Js 7s 4h 2h") },
-      { id: "D", text: "A big pair.", cards: cards("Ks Kh 7c 2d") },
+      {
+        id: "C",
+        text: "A big pair.",
+        cards: cards("Qs Qd 6c 2s"),
+      },
+      {
+        id: "D",
+        text: "Ace-king.",
+        cards: cards("As Kc 7d 3h"),
+      },
     ],
-    correctChoiceId: "B",
-    answerHeadline: "B — K♠Q♠J♥T♥.",
+    correctChoiceId: "A",
+    answerHeadline: "A — A♥Q♥J♣T♣.",
     explanation: [
-      "This is the book's own early-position opening example. Four connected high cards, two suits, no dangler, and every card contributing: it makes high straights, strong two pair and strong combo draws, and it still has ways to continue if somebody raises behind you.",
-      "A♠K♦8♥3♣ is the most common crossover error, and it's the one the book names. AK is recognisable Hold'em strength, but the eight and the three contribute nothing, there is no suit, and early position is where you leave out hands with a major dangler. It isn't AK with two extra cards; it's four cards that happen to contain AK.",
-      "J♠7♠4♥2♥ is the reminder that double-suited does not repair bad construction. Both flushes are low, the straights are scattered, and two weak draws are not one strong hand.",
-      "K♠K♥7♣2♦ is a different hand from K♠K♥Q♠J♥. Ask the pair-support question: when the pair misses its set — which is most of the time — what else does the hand do? Here, almost nothing.",
+      "The more players see the flop, the more often somebody else has made a strong hand, so the question becomes what your hand makes when it connects — and whether that is the best version of it.",
+      "A♥Q♥J♣T♣ makes the nut heart flush, the high straights and top two pair. All four cards work together, and when it hits it tends to hit the top of the range.",
+      "8♣7♣6♥5♥ looks like the most flexible hand here, and it connects often. But it makes low straights that higher rundowns beat, and eight-high and six-high flushes that any bigger flush beats. With five players in, those second-best hands are what cost stacks.",
+      "Q♠Q♦6♣2♠ needs a set, and the six and two contribute almost nothing when it misses. A♠K♣7♦3♥ is recognisable Hold'em strength, but rainbow: it can't make a flush at all, and the seven and three are danglers.",
     ],
-    principle: "Double-suited does not repair bad construction.",
+    principle: "The more multiway the pot, the more you should care about drawing to the nuts.",
   },
   {
-    id: "the-permanent-straddle",
+    id: "set-mining-a-short-stack",
     number: 3,
     concept: "effective-stack",
-    title: "The straddle is on every orbit",
+    title: "Set-mining a short stack",
     setup: [
-      "The game is advertised as $2/$5 and you buy in for $300 — your usual 60 big blinds.",
-      "The table runs a near-permanent $10 straddle. It's on almost every hand, and nobody is turning it off.",
+      "You've won a couple of pots and have $520. The cutoff has $140 and opens to $17. You hold 5♠5♥A♦9♣ on the button, and both blinds have full stacks behind you.",
+      "In Hold'em this is a textbook set-mine: call cheaply, and win a big pot the times you flop a set.",
     ],
-    hand: [],
+    hand: cards("5s 5h Ad 9c"),
     board: [],
     facts: [
-      { label: "Advertised", value: "$2/$5" },
-      { label: "Live blind", value: "$10 straddle" },
-      { label: "Your stack", value: "$300" },
-      { label: "Depth", value: "60 posted BB · 30 straddles", wide: true },
+      { label: "Your stack", value: "$520" },
+      { label: "Cutoff's stack", value: "$140" },
+      { label: "Cost to call", value: "$17" },
+      { label: "Flop SPR vs cutoff", value: "About 3" },
     ],
-    prompt: "What has actually changed?",
+    prompt: "What does your $520 buy you here?",
     choices: [
       {
         id: "A",
-        text: "Nothing meaningful. You bought in for 60 big blinds and you're playing 60 big blinds.",
+        text: "Implied odds. You're deep, so call and let the set pay you off.",
       },
       {
         id: "B",
-        text: "You're effectively deeper, because every pot is bigger.",
+        text: "Nothing against this player. What you can win is capped by his $140, not your $520 — the effective stack. Even the best case barely breaks even, so fold.",
       },
       {
         id: "C",
-        text: "Against the live $10 blind you're about 30 blinds deep. Preflop pots grow faster, a raise and a call can create a very low SPR, 3-bet pots can be near-committed before the flop, and speculative calls lose value. Re-label the stack and choose: play the 30-blind structure deliberately, buy deeper if the room allows, or find another game.",
+        text: "The right to 3-bet. You cover him, so put the pressure on.",
       },
       {
         id: "D",
-        text: "Play tighter and wait for the straddle to stop.",
+        text: "Protection. The blinds are deep too, so a set could win a huge multiway pot.",
       },
-    ],
-    correctChoiceId: "C",
-    answerHeadline: "C — re-label the stack, then choose deliberately.",
-    explanation: [
-      "$300 is 60 posted big blinds and 30 straddles at the same time. Both labels are accurate. The one that matters is the one the betting actually uses, and every raise at this table is sized off the $10.",
-      "That is not a small adjustment. The same open, 3-bet and call that leaves a workable SPR in an unstraddled game leaves far less behind here, and the hands that need room to manoeuvre — speculative rundowns, drawing hands you planned to fold cheaply — lose most of their value first.",
-      "None of the three real options is wrong. Playing a 30-blind structure on purpose is a legitimate choice, so is buying deeper where the room allows it, and so is finding a different game. The mistake is playing a 30-blind structure while thinking you're playing 60.",
-      "The same question applies away from the straddle: effective depth is always measured against a specific opponent. Win a pot and you may be 44 big blinds deep against the player on your left and 108 against the one on your right.",
-    ],
-    principle: "Stack depth is relative to the game actually being played.",
-  },
-  {
-    id: "building-the-pot-you-want",
-    number: 4,
-    concept: "spr",
-    title: "Building the pot you want",
-    setup: [
-      "Two loose-passive players limp. They play too many hands, limp-call too much, chase draws and rarely 3-bet — the range you want to be playing against.",
-      "You raise on the button and both call. The flop pot is about $65 with roughly $280 behind, an SPR of about 4.3. Both players check.",
-    ],
-    hand: cards("As Ks Qd Jd"),
-    board: cards("Qs Ts 4c"),
-    facts: [
-      { label: "Position", value: "Button, three-way" },
-      { label: "Pot", value: "$65" },
-      { label: "Behind", value: "$280" },
-      { label: "Flop SPR", value: "About 4.3" },
-    ],
-    prompt: "You bet $45. What is the actual case for it?",
-    choices: [
-      {
-        id: "A",
-        text: "You raised preflop, so you have to continue.",
-      },
-      {
-        id: "B",
-        text: "Protection. You need to charge the flush draw before it gets there.",
-      },
-      {
-        id: "C",
-        text: "Worse draws and weaker queens call, your equity against a wide checking range is already strong, and the bet builds a pot with a hand that gets better as the stack behind shrinks. $45 called once makes a turn pot near $155 with about $235 behind — SPR about 1.5.",
-      },
-      {
-        id: "D",
-        text: "Check back. The board is too dynamic for one pair.",
-      },
-    ],
-    correctChoiceId: "C",
-    answerHeadline: "C — bet, and be able to name all three jobs it does.",
-    explanation: [
-      "Top pair, the nut flush draw and real straight coverage is a combination hand, not a made hand with a backup plan. A bet here has three named jobs: worse draws and weaker queens call it, your current equity against a wide checking range is strong, and the pot it builds suits your hand better the less money is left behind.",
-      "\"Protection\" is the wrong word for it, which is why B fails. You hold the nut flush draw. Nothing in their range is drawing to a better spade, so there is no dominant draw to charge.",
-      "SPR 4.3 sits in the zone where you plan the streets before you bet rather than after: which turns you want, what you do against a raise, and where the stack ends up. One called bet takes the turn SPR to about 1.5, and at 1.5 this hand is comfortable playing for the rest.",
-      "That is the difference between arriving at a low SPR and choosing one. A and D both skip the planning — one by betting without a reason, the other by refusing a spot that the falling SPR makes favourable.",
-    ],
-    principle: "Build lower-SPR pots when your hand benefits.",
-  },
-  {
-    id: "the-dominated-flush-draw",
-    number: 5,
-    concept: "nuttiness",
-    title: "The king-high flush draw, three-way",
-    setup: [
-      "You call a raise on the button and three of you see the flop.",
-      "The preflop raiser bets, one player calls, and the decision comes to you.",
-    ],
-    hand: cards("Ks Qs 8d 7d"),
-    board: cards("Js 6s 3h"),
-    facts: [
-      { label: "Position", value: "Button" },
-      { label: "Players", value: "Three-way" },
-      { label: "Action", value: "Raiser bets, one caller" },
-    ],
-    prompt: "What is your flush draw actually worth here?",
-    choices: [
-      {
-        id: "A",
-        text: "A strong draw. Nine spades, two cards to come, and there's already money in the pot.",
-      },
-      {
-        id: "B",
-        text: "More players means a better price, so multiway makes continuing easier.",
-      },
-      {
-        id: "C",
-        text: "Ask where A♠x♠ is. Three-way, a higher spade draw is far more likely to be out, which kills outs and costs you more on the cards that complete your hand. This is precisely the equity that loses value as players enter.",
-      },
-      {
-        id: "D",
-        text: "Nothing. Non-nut flush draws are never playable.",
-      },
-    ],
-    correctChoiceId: "C",
-    answerHeadline: "C — downgrade it, because the field makes domination likely.",
-    explanation: [
-      "Against one opponent a king-high flush draw is often perfectly viable. Against several, domination stops being a possibility and becomes an expectation — and a dominated draw is one of the most expensive holdings in live PLO, because the cards that complete it are the cards that cost you the most.",
-      "That is reverse implied odds stated plainly. Hitting makes a strong-looking second-best hand, and a strong-looking second-best hand is how stacks change seats.",
-      "B is the slogan in the other direction. Multiway is two checks, not one: extra callers genuinely can improve the price, while your equity quality falls further than the price improves. Work out both rather than picking the half that suits the call.",
-      "D is a slogan too. Nuttiness is a factor you weigh against the price and the range, not a rule that plays the hand for you. This is also the whole reason nut-suited starting hands carry such a premium.",
-    ],
-    principle:
-      "Don't ask whether you can make a flush. Ask how often you win when you do.",
-  },
-  {
-    id: "counting-a-big-draw",
-    number: 6,
-    concept: "draw-quality",
-    title: "Counting a big draw",
-    setup: ["A heads-up 3-bet pot. The opponent bets $60 into $123 on the flop."],
-    hand: cards("Ks Qs Jd 9d"),
-    board: cards("Ts 8s 3h"),
-    facts: [
-      { label: "Pot", value: "$123" },
-      { label: "Behind", value: "$242" },
-      { label: "Opponent bets", value: "$60" },
-    ],
-    prompt: "Before you decide, which description of your draw is accurate?",
-    choices: [
-      { id: "A", text: "22 outs: 13 straight cards plus 9 spades." },
-      {
-        id: "B",
-        text: "19 unique improving cards. The 10 non-spade straight cards and the A♠ make the current nuts; the other 8 spades give you a flush that can already be beaten.",
-      },
-      { id: "C", text: "9 outs. Only flush cards count on a two-tone board." },
-      { id: "D", text: "13 clean outs. Straights always beat flushes." },
     ],
     correctChoiceId: "B",
-    answerHeadline: "B — 19 unique cards, 11 of which make the current nuts.",
+    answerHeadline: "B — fold. His stack sets the price, not yours.",
     explanation: [
-      '"13 straight cards + 9 spades = 22" counts 7♠, 9♠ and J♠ twice. They are one physical card each. Overlapping improvement labels never create extra outs.',
-      "The real count:",
+      "The effective stack is the amount the relevant players can match. Against the cutoff that is $140, however many chips you have. After your call there is $41 in the pot and he has $123 behind: an SPR of about 3.",
+      "Now run the best case. You flop at least a set about 12.2% of the time. If you win every one of those pots and he pays off all $123, you net $147; the other 87.8% of the time you lose $17. That is about +$3 a call — before you discount the sets that lose to higher sets or straights, the times he doesn't pay, and a squeeze from the deep blinds behind you. Every one of those turns it negative.",
+      "The pair is also most of what this hand has. The ace has no suit to go with it, and the nine connects with nothing.",
+      "Speculative hands live on implied odds, and implied odds come from the other player's stack. Your deep stack only matters when the money that pays you off is deep too.",
+    ],
+    principle: "Short stacks take implied odds away. The shorter stack decides.",
+  },
+  {
+    id: "a-medium-hand-at-low-spr",
+    number: 4,
+    concept: "spr",
+    title: "A medium hand at low SPR",
+    setup: [
+      "You open the button to $17 with K♥Q♠9♣8♥. The small blind folds, and the big blind — a loose-aggressive player who 3-bets wide and leads flops often — 3-bets the pot to $53. You call.",
+      "The flop is K♦9♠4♣. There's $108 in the pot and $247 behind, and the big blind leads $108.",
+    ],
+    hand: cards("Kh Qs 9c 8h"),
+    board: cards("Kd 9s 4c"),
+    facts: [
+      { label: "Position", value: "Button vs big blind" },
+      { label: "Pot", value: "$108" },
+      { label: "Behind", value: "$247" },
+      { label: "They lead", value: "$108" },
+      { label: "Read", value: "Loose-aggressive: 3-bets wide, leads flops often", wide: true },
+    ],
+    prompt: "Top two pair and nothing else. What do you do?",
+    choices: [
+      {
+        id: "A",
+        text: "Fold. Bare two pair is a medium hand in PLO, and a pot-sized lead means strength.",
+      },
+      {
+        id: "B",
+        text: "Call, and fold the turn if a bad card comes. Keep the pot manageable.",
+      },
+      {
+        id: "C",
+        text: "Raise all-in. At this SPR a bet and a raise commit the stack anyway, and against this player's wide range top two is ahead of far more than it trails.",
+      },
+      {
+        id: "D",
+        text: "Raise all-in. SPR is under 3, so you're committed with any pair.",
+      },
+    ],
+    correctChoiceId: "C",
+    answerHeadline: "C — get it in. Low SPR is where a medium hand gets to play for stacks.",
+    explanation: [
+      "A is half right. Bare two pair is a medium hand, and in a deep multiway pot it plays small. But the book is precise about medium hands: SPR and the number of opponents decide everything. This one is heads-up at an SPR of 2.3, against a player whose leads are wide.",
+      "On a dry rainbow board, only three sets beat you now. Against the rest of a wide 3-betting range you are well ahead. Against these study holdings: A♥A♣Q♦J♥ 59.9%, K♣Q♦J♠T♥ 65.1%, J♣T♣8♠7♦ 74.1%. Against the sets you are in trouble — 12.0% against 9♥9♦7♣6♥, 21.0% against 4♥4♦A♣7♥ — and those are the price of playing this spot.",
+      "The raise is to $247 total. If they always call, your $247 goes into a final $602 pot and needs 41.0% equity, before counting the folds a raise also wins.",
+      "B is the plan that actually loses money. After a call there's $324 in the pot and $139 behind, so a turn shove asks for only 23.1%, and you will almost never have less than that. Planning to fold there throws away your equity. D reaches the right action for a reason that would get the next hand wrong: SPR describes the remaining bet, not your cards.",
+    ],
+    principle: "SPR decides how much a medium hand can play for. It doesn't make every hand a commitment.",
+  },
+  {
+    id: "you-flopped-a-flush",
+    number: 5,
+    concept: "nuttiness",
+    title: "You flopped a flush, five ways",
+    setup: [
+      "Three players limp, the small blind completes, and you check your option in the big blind with 6♦4♦K♠2♣ — a hand you would never have raised.",
+      "Five of you see T♦8♦3♦. There's $25 in the pot and $295 behind: an SPR of 11.8. The small blind checks to you.",
+    ],
+    hand: cards("6d 4d Ks 2c"),
+    board: cards("Td 8d 3d"),
+    facts: [
+      { label: "Players", value: "Five" },
+      { label: "Pot", value: "$25" },
+      { label: "Behind", value: "$295" },
+      { label: "SPR", value: "11.8" },
+    ],
+    prompt: "You have a ten-high flush. What is it worth in this pot?",
+    choices: [
+      {
+        id: "A",
+        text: "It's a monster. Bet the pot now, before a fourth diamond can beat you.",
+      },
+      {
+        id: "B",
+        text: "It's the nuts until the board changes, so build the biggest pot you can.",
+      },
+      {
+        id: "C",
+        text: "It's a medium-strength hand. Any opponent holding two diamonds with one above your six already beats it, and with four opponents that's close to a coin flip. Keep the pot small and don't stack off to heavy action.",
+      },
+      {
+        id: "D",
+        text: "Nothing. Small flushes are never good multiway, so give it up to any bet.",
+      },
+    ],
+    correctChoiceId: "C",
+    answerHeadline: "C — a medium hand. Play it that way.",
+    explanation: [
+      "A flush needs two of your cards and three from the board, so a higher flush needs two diamonds in the same hand, one of them above your six: the A♦, K♦, Q♦, J♦, 9♦ or 7♦ with any other diamond. Each opponent holds four cards. Against four random hands, somebody already has one close to half the time — and limpers' ranges are full of suited cards.",
+      "Nothing rescues you, either. You can't make a full house, and no turn card lifts your flush past a hand that already beats it. Meanwhile the hands that aren't beating you yet — sets and two pair — have full-house redraws.",
+      "B is the error that costs a stack. \"It's the nuts until the board changes\" is only true if nobody has two diamonds, and in a five-way pot you can't assume that. A and B also share the Hold'em instinct that a flopped flush must be protected. Here, the hands that call a big bet are mostly the ones beating you.",
+      "D is a slogan in the other direction. At SPR 11.8 there's room to take a cheap card, pick off a bluff, or value bet a smaller flush. You just don't build a pot you can't release.",
+    ],
+    principle: "Multiway, a non-nut hand is a medium hand, whatever it's called.",
+  },
+  {
+    id: "thirteen-straight-cards",
+    number: 6,
+    concept: "draw-quality",
+    title: "Thirteen straight cards",
+    setup: [
+      "You open the button to $17 with Q♠J♦9♣8♣ and the big blind calls. There's $36 in the pot and $283 behind.",
+      "The flop is T♥7♥2♣ and the big blind checks. Before you bet, count what you're drawing to.",
+    ],
+    hand: cards("Qs Jd 9c 8c"),
+    board: cards("Th 7h 2c"),
+    facts: [
+      { label: "Position", value: "Button vs big blind" },
+      { label: "Pot", value: "$36" },
+      { label: "Behind", value: "$283" },
+    ],
+    prompt: "How many of your cards are clean outs?",
+    choices: [
+      {
+        id: "A",
+        text: "Thirteen. Every straight you can make here is the best straight.",
+      },
+      {
+        id: "B",
+        text: "Nine. Thirteen cards make the best straight, but four of them are hearts that also put three hearts on the board.",
+      },
+      { id: "C", text: "Sixteen: thirteen straight cards plus the three queens for top pair." },
+      { id: "D", text: "Eight, the same as an open-ended straight draw." },
+    ],
+    correctChoiceId: "B",
+    answerHeadline: "B — nine clean, four more that make a flush for someone else.",
+    explanation: [
+      "Find the straights first. With two of your cards and three from the board, any 6, 8, 9 or J completes one: 9-8 with T-7-6, J-9 with T-8-7, J-8 with T-9-7, and 9-8 with J-T-7. That's thirteen cards, and on every one of those boards your straight is the highest straight possible.",
+      "Then grade them. The board already has two hearts. The 6♥, 8♥, 9♥ and J♥ make your straight and put a third heart out, so any opponent holding two hearts now has a flush — and on each of them the right two hearts make a straight flush. Those four are dirty. The other nine are clean on the turn, though an unmade flush draw still has the river against you.",
     ],
     outsTable: {
       rows: [
         {
-          improvement: "Straight, non-spade",
-          cards: "7♥ 7♦ 7♣ · 9♥ 9♣ · J♥ J♣ · Q♥ Q♦ Q♣",
-          count: 10,
+          improvement: "Best straight, no third heart",
+          cards: "6♠ 6♦ 6♣ · 8♠ 8♦ · 9♠ 9♦ · J♠ J♣",
+          count: 9,
         },
-        { improvement: "Spade flush, ace on board", cards: "A♠", count: 1 },
-        { improvement: "Spade flush, beatable", cards: "2♠ 4♠ 5♠ 6♠ 7♠ 9♠ J♠", count: 7 },
-        { improvement: "Spade flush that pairs the board", cards: "3♠", count: 1 },
+        {
+          improvement: "Best straight, but three hearts on board",
+          cards: "6♥ 8♥ 9♥ J♥",
+          count: 4,
+        },
       ],
-      totalLabel: "Total unique",
-      total: 19,
+      totalLabel: "Total straight cards",
+      total: 13,
     },
-    principle: "Count unique outs. Then grade their quality. Both steps, every time.",
+    principle: "Grade every out. A card that makes your hand and someone else's better hand is not clean.",
   },
   {
-    id: "same-hand-different-price",
+    id: "price-the-check-raise",
     number: 7,
     concept: "price",
-    title: "Same hand. Different price.",
+    title: "Price the check-raise",
     setup: [
-      "One spot, played twice. You hold top set and the turn has put a straight on the board. You face a bet.",
-      "The only difference between the two versions is the stack everyone started with: $300 in the first, $200 in the second. Same cards, same board, same line, same opponent.",
+      "The cutoff opens $17 and you call on the button with A♣K♣J♥T♦. Heads-up, you bet $30 on 9♣8♦5♣ and the cutoff calls.",
+      "The turn is the 2♥. The cutoff checks, you bet $80 into $101 with the nut flush draw and an open-ended straight draw, and the cutoff check-raises all-in to $253.",
     ],
-    hand: cards("Qh Qc 7d 6d"),
-    board: cards("Qd 9c 4s 8h"),
+    hand: cards("Ac Kc Jh Td"),
+    board: cards("9c 8d 5c 2h"),
     boardStreetBreaks: [3],
     boardLabel: "Board · flop + turn",
     facts: [
-      { label: "Version 1", value: "$300 effective · 60 BB" },
-      { label: "Version 2", value: "$200 effective · 40 BB" },
-      { label: "Your hand", value: "Top set, straight now possible", wide: true },
+      { label: "Pot before your bet", value: "$101" },
+      { label: "You bet", value: "$80" },
+      { label: "They raise to", value: "$253" },
+      { label: "Their range", value: "Weighted to made straights, with some sets", wide: true },
     ],
-    prompt: "Does the shorter stack change the answer?",
+    prompt: "What does the call actually cost, and do you make it?",
     choices: [
       {
         id: "A",
-        text: "No. Same hand, same board, same decision.",
+        text: "Fold. You owe $253 into a $607 pot — 41.7% — and fourteen outs is only 35%.",
       },
       {
         id: "B",
-        text: "Yes — you're shorter, so you should be more willing to commit with a set.",
+        text: "Fold. The semi-bluff failed the moment they raised.",
       },
       {
         id: "C",
-        text: "Yes, but it's the price that moved, not the hand. At $300 effective the call needs 30.0% and the set has 25.0%, so it's a fold. At $200 effective the same call needs 20.1%, and the fold becomes a call.",
+        text: "Call. Your $80 is already in the pot, so you owe $173 into a final $607: 28.5%. Against a made straight, fourteen of the forty unseen rivers win — 35%.",
       },
       {
         id: "D",
-        text: "Yes. At 40 big blinds you're committed with a set whatever the price.",
+        text: "Call. Fourteen outs times four is 56%, so you're the favourite.",
       },
     ],
     correctChoiceId: "C",
-    answerHeadline: "C — fold at 60 BB, call at 40 BB, for the same reason.",
+    answerHeadline: "C — call. Price the extra amount, not the whole raise.",
     explanation: [
-      "The cards never changed. The effective stack changed, and the effective stack sets the size of the bet you can be asked to face, which sets the price, which sets the equity you need.",
-      "At $300 effective you are being asked for 30.0% with a hand worth 25.0% against the range that is betting. Five points is not a close call to talk yourself into. It's a fold.",
-      "At $200 effective the same hand against the same range needs 20.1%, and 25.0% clears it comfortably. Nothing about the hand improved. The question changed.",
-      "This is also why \"I'm committed\" is a conclusion rather than a starting point. Work out what you still owe against the final pot, then compare it with what the hand is actually worth against the range in front of you. B and D both skip that step and arrive at the right action for the wrong reason, which means they will get the next one wrong.",
+      "Facing a raise, the cost is only what you still owe. Your $80 already belongs to the pot. The raise is to $253, so you owe $173, and the final pot will be $101 + $253 + $253 = $607. $173 ÷ $607 is 28.5%.",
+      "Now the equity. Against a made nine-high straight — the study holding 7♠6♥4♦3♠ — your winners are the nine remaining clubs for the ace-high flush, plus the Q♠ Q♥ Q♦ and the 7♥ 7♦ for a higher straight: fourteen of forty rivers, 35.0%. Against the sets in this line you still clear the price: 32.5% against 9♥9♦6♠3♦, 30.0% against 8♥8♠6♦4♣. So does a straight that holds clubs of its own and takes some of your flush cards away: 30.0% against 7♣6♣4♦3♠.",
+      "A does the right arithmetic on the wrong number. Pricing the whole $253 turns a clear call into a fold.",
+      "D reaches the right action by the wrong method. The rule of four prices two cards to come, and this is the turn: there is one card left. It is also all-in, so there are no implied odds and no further decisions — the price you just calculated is the whole bet.",
     ],
-    principle: "Does the present price justify the next investment?",
+    principle: "Facing a raise, price only what you still owe.",
   },
   {
-    id: "the-turn-pairs-the-board",
+    id: "the-flush-card-arrives",
     number: 8,
     concept: "turn-discipline",
-    title: "The turn pairs the board",
+    title: "The flush card arrives",
     setup: [
-      "You 3-bet the button to $58 against a wide cutoff opener, who calls.",
-      "On the flop the cutoff leads $100 and you call, leaving $323 in the pot and $142 behind. The turn pairs the board, and the cutoff shoves $142.",
+      "You open the button to $17 with Q♦J♣9♠6♣ and the big blind calls. The big blind is tight and passive, and hasn't bet into the preflop raiser all night.",
+      "On T♥8♥7♠ you flop the nut straight. The big blind checks, you bet $36, and they call. The turn is the 2♥, and for the first time tonight the big blind leads — $108, the pot.",
     ],
-    hand: cards("Jd Td 7c 6s"),
-    board: cards("9s 8h 2d 8c"),
+    hand: cards("Qd Jc 9s 6c"),
+    board: cards("Th 8h 7s 2h"),
     boardStreetBreaks: [3],
     boardLabel: "Board · flop + turn",
     facts: [
-      { label: "Position", value: "Button vs cutoff" },
-      { label: "Pot", value: "$323" },
-      { label: "Behind", value: "$142" },
+      { label: "Pot", value: "$108" },
+      { label: "They lead", value: "$108" },
+      { label: "Behind", value: "$247" },
       {
         label: "Read",
-        value:
-          "Leads flops with sets and two pair more often than draws; has 4-bet overpairs preflop (MEDIUM confidence)",
+        value: "Tight-passive; hasn't bet into the raiser all night",
         wide: true,
       },
     ],
-    prompt: "What do you do, and why?",
+    prompt: "You flopped the nuts. What do you do now?",
     choices: [
       {
         id: "A",
-        text: "Call. You had about 55% against a set on the flop and you still hold 20 straight cards.",
+        text: "Raise all-in. You flopped the nut straight, and nothing has happened to your hand.",
       },
-      { id: "B", text: "Call. You need only 23.4%, and 20 cards out of 44 is about 45%." },
+      {
+        id: "B",
+        text: "Call. You had the nuts a street ago, and at this SPR you're committed.",
+      },
       {
         id: "C",
-        text: "Fold. The paired board turns the flop's sets into full houses or quads, and 98 is now a full house. None of your straight cards beat those hands. The price is fine; your equity against this range isn't.",
+        text: "Fold. The 2♥ is the third heart. Any two hearts now beat you, and your straight can't improve past a flush. This player's first lead of the night, on this card, is weighted to exactly that.",
       },
-      { id: "D", text: "Fold. Never call off with a draw on the turn." },
+      {
+        id: "D",
+        text: "Call. Your straight still has outs if they have a flush.",
+      },
     ],
     correctChoiceId: "C",
-    answerHeadline: "C — fold, because the equity died, not because the price is bad.",
+    answerHeadline: "C — fold. The flop's nuts isn't this turn's nuts.",
     explanation: [
-      "The price is genuinely fine. You owe $142 into a final $607, so you need 23.4%.",
-      "What changed is the board. The 8♣ pairs it. Flopped 99xx and 22xx are now full houses, 88xx is quads, and 98xx is now a full house. Against those hands, none of your twenty straight completions win. Not some. None.",
-      "Option A is the classic error: paying a turn price with flop equity. Your flop number was computed against a board that no longer exists. Option B counts completions rather than winners against this range.",
-      "Option D is the opposite mistake — a slogan. A draw can be a perfectly profitable turn call at the right price against the right range. This isn't one.",
+      "Start the hand again from the turn. The 2♥ puts three hearts on the board, and a player holding two hearts has a flush. Your J♣9♠ straight is still the best straight, but straights no longer top the board.",
+      "Against a flush you are drawing dead. You have no heart, and no river turns a straight into anything that beats a flush. Against the study holding A♥5♥K♣4♦ your equity is 0%. Against a set, 7♣7♦A♣Q♠, you are 75%. Against the same J-9, you split.",
+      "So the answer turns on the player, which is what the fourth question is for. The price is $108 into a final $324: 33.3%. A tight-passive player who has not bet into the raiser all night, and who check-called the flop, leads the pot on the one card that completes the flush draw. That range is flushes first. There aren't enough sets and chops in it to make up a third.",
+      "A and B both play the flop's hand on the turn's board. D is simply not true: with no heart and no pair, nothing on the river rescues a straight against a flush.",
     ],
-    principle: "Do not pay turn prices with flop equity.",
+    principle: "When the board changes, start over. The nuts is a fact about this street, not the last one.",
   },
   {
-    id: "value-bet-then-fold",
+    id: "the-small-river-bet",
     number: 9,
     concept: "river-discipline",
-    title: "You bet the river and got raised",
+    title: "The small river bet",
     setup: [
-      "The river completes the spade draw and gives you the king-high flush. There is $120 in the pot, heads-up against a tight-passive player who has paid off with worse.",
-      "You bet $50 for value. They raise all-in to $241.",
+      "The button opens $17 and you call in the big blind with K♦8♥5♥3♠. The button is loose-aggressive and bets most rivers after betting the turn.",
+      "On Q♣8♣5♦ you check-call $24 with two pair. On the 2♥ turn you check-call $60. The river is the J♠, you check, and the button bets $68 into $204.",
     ],
-    hand: cards("Ks Js Th 8h"),
-    board: cards("Qs 9s 5d 3c 2s"),
+    hand: cards("Kd 8h 5h 3s"),
+    board: cards("Qc 8c 5d 2h Js"),
     boardStreetBreaks: [3, 4],
     boardLabel: "Board · final",
     facts: [
-      { label: "Pot before your bet", value: "$120" },
-      { label: "You bet", value: "$50" },
-      { label: "They raise to", value: "$241" },
-      { label: "Read", value: "Tight-passive; large raises have meant strength", wide: true },
-    ],
-    prompt: "You owe $191. What do you do?",
-    choices: [
-      {
-        id: "A",
-        text: "Call. You bet, so you can't fold now — and the second nuts is too strong to give up.",
-      },
-      {
-        id: "B",
-        text: "Call. $191 into a final $602 is 31.7%, and a king-high flush beats most of their range.",
-      },
-      {
-        id: "C",
-        text: "Fold. The $50 was priced for the hands that call. The raise is a different range, and from a tight-passive player it is almost all value. Name the bluffs it contains; if you can't, the 31.7% isn't there.",
-      },
-      { id: "D", text: "Raise. You have the second nuts." },
-    ],
-    correctChoiceId: "C",
-    answerHeadline: "C — fold, and the value bet was still correct.",
-    explanation: [
-      "The bet and the fold face different ranges, which is why both can be right. The hands that call $50 include worse flushes, straights and stubborn two pair. The hands that raise all-in mostly do not.",
-      "Price the raise on the incremental amount. You owe $191, not $241 — the $50 already belongs to the pot. $191 into a final $602 is 31.7%.",
-      "Then name the bluffs that survive. Which missed draw would this tight-passive player turn into an all-in river raise here? If you can't put a specific holding on that list, you are not being offered 31.7% of anything. River raises in live games are heavily weighted to value, and from this profile especially.",
-      "Option A is sunk cost dressed up as consistency. Betting and then folding to a raise is not a contradiction; against passive players it is one of the strongest exploits available. Option B is right about the arithmetic and wrong about whose range it is measuring.",
-    ],
-    principle:
-      "Don't pay for the name of your hand. The second nuts can still be a bluff-catcher.",
-  },
-  {
-    id: "a-full-system-hand",
-    number: 10,
-    concept: "whole-hand",
-    title: "One hand, start to finish",
-    setup: [
-      "A loose-passive player limps. They limp too much, call raises too wide, chase weak draws, rarely bluff rivers, and every time they have raised late they have had it.",
-      "You raise the button and they call. On Q♠9♠4♥ they check, you bet, they call. The 2♣ turn is a blank and they check again. The 8♠ river makes your nut flush, and they check a third time. There is very little stack left.",
-    ],
-    hand: cards("As Ks Jd Td"),
-    board: cards("Qs 9s 4h 2c 8s"),
-    boardStreetBreaks: [3, 4],
-    boardLabel: "Board · flop, turn, river",
-    facts: [
-      { label: "Position", value: "Button, heads-up" },
-      { label: "River", value: "8♠ — you hold the nut flush" },
-      { label: "Behind", value: "Very little" },
+      { label: "Pot", value: "$204" },
+      { label: "They bet", value: "$68" },
+      { label: "Behind", value: "$199" },
       {
         label: "Read",
-        value: "Loose-passive: calls too wide, chases weak draws, rarely bluffs rivers",
+        value: "Loose-aggressive; bets most rivers after betting the turn",
         wide: true,
       },
     ],
-    prompt: "They've checked the river. What's the reasoning that gets this last bet right?",
+    prompt: "Bottom two pair against a third-pot bet. What do you do?",
     choices: [
       {
         id: "A",
-        text: "Check back. They called the flop and then went quiet, so there's nothing left to bet into.",
+        text: "Fold. There's a straight on board, and any river bet into two pair is value.",
       },
       {
         id: "B",
-        text: "Bet the rest because you have the nuts. That's the whole reason.",
+        text: "Raise all-in. The bet is small, which means weakness.",
       },
       {
         id: "C",
-        text: "Bet the rest, for a named reason: there is no equity left to realise and nothing left to deny, so the only question is what worse hands call — and against this player, lower flushes, straights, sets and curious two pair all can.",
+        text: "Call. You only need to be good one time in five, and this line is full of hands that missed.",
       },
       {
         id: "D",
-        text: "Bet small, in case they have a better flush.",
+        text: "Call. Two pair is a strong hand.",
       },
     ],
     correctChoiceId: "C",
-    answerHeadline: "C — value bet the rest, because you can name who pays.",
+    answerHeadline: "C — call. A small bet sets a low bar.",
     explanation: [
-      "Work it the way the system works every hand. Preflop: better structure than theirs, in position, against a range you actively want to play. Flop: nut flush draw plus real straight coverage on a board their wide calling range has plenty of reasons to continue on. Turn: the 2♣ changes nothing — the nuts didn't move, your draw lost a card, their range stayed wide. River: the 8♠ is your card.",
-      "On the river there is nothing left to draw to and no equity left to deny, so the river question is the only question. What worse hands call this size? Against someone who calls too wide and rarely raises, the list is long — and the player who calls too much is the player you bet into.",
-      "D is worth naming rather than skipping. You hold the A♠, so no better flush exists: nobody can beat you. A blocker is normally information rather than permission, but here it's certainty, and there is no reason to price the bet for a hand that cannot be held.",
-      "What made this hand profitable was not one clever river decision. It was a chain: a better starting hand, against a weaker range, in position, at a favourable SPR, with high-quality equity, against a player who calls too much. That is the system, and it is the same chain in every hand you have just worked through.",
+      "Price it first. $68 into $204 makes a final pot of $340, so the call needs 20.0%. You don't need this player to be bluffing often — only one time in five.",
+      "Then name what's in the range, starting with the hands that beat you: T-9 made a straight on the J♠, and sets, jacks-up and queens-up are all ahead of 8♥5♥. Then the hands that missed: every club draw, and the 7-6 and 9-7-6 straight draws, bricked when the turn and river brought the 2♥ and J♠. A player who bets most rivers after betting the turn arrives here with plenty of those, and some worse two pair and top pairs betting thin.",
+      "B raises into the part of the range you can't beat. The worse hands and missed draws fold to a raise; the straights and sets call it. A small bet isn't a sign of weakness, it's a price. D takes the right action for a reason that would get the next hand wrong: bottom two pair on this board is a bluff-catcher, and bluff-catchers are called by price and by range, not by name.",
     ],
-    principle: "The four questions, on every street: Hand · SPR · Equity · Player.",
+    principle: "Price the call, then name the bluffs. A small bet needs very few.",
+  },
+  {
+    id: "blind-versus-blind",
+    number: 10,
+    concept: "whole-hand",
+    title: "Blind versus blind, four questions",
+    setup: [
+      "It folds to the small blind, a loose-passive player who calls too much and rarely raises. They complete. You raise to $15 in the big blind with K♥Q♥J♣9♣ and they call. There's $30 in the pot and $285 behind.",
+      "On Q♠T♣4♥ they check, you bet $30, and they call. The turn is the 2♦ and they check again. There's $90 in the pot and $255 behind.",
+    ],
+    hand: cards("Kh Qh Jc 9c"),
+    board: cards("Qs Tc 4h 2d"),
+    boardStreetBreaks: [3],
+    boardLabel: "Board · flop + turn",
+    facts: [
+      { label: "Position", value: "Big blind vs small blind" },
+      { label: "Pot", value: "$90" },
+      { label: "Behind", value: "$255" },
+      { label: "Turn SPR", value: "About 2.8" },
+      {
+        label: "Read",
+        value: "Loose-passive: calls too much, rarely raises",
+        wide: true,
+      },
+    ],
+    prompt: "They've checked the turn. What do you do?",
+    choices: [
+      {
+        id: "A",
+        text: "Check back. They never fold, so there's no point in betting.",
+      },
+      {
+        id: "B",
+        text: "Bet $90. Worse queens, tens and draws call, your wrap improves on the river anyway, and the bet sets up the rest of the stack.",
+      },
+      {
+        id: "C",
+        text: "Check. Top pair is one pair, and pot control protects it.",
+      },
+      {
+        id: "D",
+        text: "Bet $20, small enough that they'll keep calling.",
+      },
+    ],
+    correctChoiceId: "B",
+    answerHeadline: "B — bet the pot. This time the calling station is the reason to bet.",
+    explanation: [
+      "Run the four questions in order. Hand: top pair with the king, plus a wrap. With exactly two of your cards and three from the board, any ace, king, jack, nine or eight makes you a straight — seventeen cards. The ace, nine and eight make the best straight. The king and jack make a straight an ace-high one can still beat, so count them, but not as clean.",
+      "SPR: about 2.8 on the turn. A pot-sized bet that is called leaves $165 behind in a $270 pot — about 0.6 — so one more bet covers the rest on the river, whichever card comes.",
+      "Equity: this player's calling range is weaker queens, tens, pairs with draws, and draws. Against the study holdings Q♦8♠7♠3♣, T♦9♥6♠5♣ and A♦3♦T♥6♣ you are 85%, 70% and 70%. Against queens-and-tens, Q♣T♦5♠5♦, you are still 42.5%.",
+      "Player: this is the one that decides the size. A loose-passive player calls with worse and seldom raises, so the bet is value, not a bluff. If they do raise, the rare raise from this player is strong and you can reassess. A misreads the player — not folding is a reason to bet good hands, not to stop betting. C plays top pair as if it were alone, ignoring the wrap. D charges a player who calls anything a fraction of what they'll pay.",
+    ],
+    principle: "Hand, SPR, equity, player — on every street, in that order.",
   },
 ];
 
