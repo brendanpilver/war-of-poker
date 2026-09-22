@@ -39,8 +39,6 @@ export type Choice = {
 export type SituationFact = {
   label: string;
   value: string;
-  /** Spans the full row. Set on long values such as a player read. */
-  wide?: boolean;
 };
 
 /** A row of the out-counting table on Hand 6. */
@@ -253,7 +251,7 @@ export const hands: ChallengeHand[] = [
       { label: "Pot", value: "$108" },
       { label: "Behind", value: "$247" },
       { label: "They lead", value: "$108" },
-      { label: "Read", value: "Loose-aggressive: 3-bets wide, leads flops often", wide: true },
+      { label: "Read", value: "Loose-aggressive: 3-bets wide, leads flops often" },
     ],
     prompt: "Top two pair and nothing else. What do you do?",
     choices: [
@@ -400,7 +398,7 @@ export const hands: ChallengeHand[] = [
       { label: "Pot before your bet", value: "$101" },
       { label: "You bet", value: "$80" },
       { label: "They raise to", value: "$253" },
-      { label: "Their range", value: "Weighted to made straights, with some sets", wide: true },
+      { label: "Their range", value: "Weighted to made straights, with some sets" },
     ],
     prompt: "What does the call actually cost, and do you make it?",
     choices: [
@@ -451,7 +449,6 @@ export const hands: ChallengeHand[] = [
       {
         label: "Read",
         value: "Tight-passive; hasn't bet into the raiser all night",
-        wide: true,
       },
     ],
     prompt: "You flopped the nuts. What do you do now?",
@@ -503,7 +500,6 @@ export const hands: ChallengeHand[] = [
       {
         label: "Read",
         value: "Loose-aggressive; bets most rivers after betting the turn",
-        wide: true,
       },
     ],
     prompt: "Bottom two pair against a third-pot bet. What do you do?",
@@ -555,7 +551,6 @@ export const hands: ChallengeHand[] = [
       {
         label: "Read",
         value: "Loose-passive: calls too much, rarely raises",
-        wide: true,
       },
     ],
     prompt: "They've checked the turn. What do you do?",
