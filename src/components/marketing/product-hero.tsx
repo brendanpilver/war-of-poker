@@ -47,7 +47,7 @@ import { BuyOfferButton } from "./buy-offer-button";
  * headline, one byline, one line of argument. A paragraph describing the book
  * as a decision system for expensive spots used to sit here too, and it was
  * cut rather than shortened — `ExpensiveDecision` follows immediately and makes
- * that case with a real $242 hand, so the hero was spending a line to preempt
+ * that case with a real hand, so the hero was spending a line to preempt
  * its own proof. The byline holds on one line down to 375px, which is what buys
  * the cover its full width back.
  *
