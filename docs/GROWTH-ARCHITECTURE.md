@@ -457,8 +457,8 @@ short-stack-plo/field-kit/07_20-Hand_Capstone_Quiz_and_Answer_Key.pdf
 ```
 
 The free Survival Card is served publicly from
-`public/downloads/nlh-to-plo-survival-card.pdf` — **this file does not exist
-yet** and must be added before the quiz's email exchange delivers anything.
+`public/downloads/nlh-to-plo-survival-card.pdf`, a copy of the publication
+set's Word export. See [`public/downloads/README.md`](../public/downloads/README.md).
 
 ### 3. Stripe
 
