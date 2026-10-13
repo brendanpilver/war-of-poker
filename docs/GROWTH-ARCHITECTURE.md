@@ -447,6 +447,7 @@ bucket at exactly these paths — they are what
 
 ```
 short-stack-plo/Short_Stack_PLO.pdf
+short-stack-plo/00_Start_Here.pdf
 short-stack-plo/field-kit/01_Full-Hand_Decision_Map.pdf
 short-stack-plo/field-kit/02_60BB_Preflop_and_Pot_Geometry_Guide.pdf
 short-stack-plo/field-kit/03_Flop_and_Draw_Quality_Card.pdf

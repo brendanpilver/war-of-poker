@@ -83,15 +83,25 @@ describe("product assets", () => {
     assert.equal(assets[0].id, "book");
   });
 
-  it("gives the Complete System the book plus all seven Field Kit pieces", () => {
-    assert.equal(delivery.assetsFor("complete-system").length, 8);
+  it("gives the Complete System nine PDFs: the book, Start Here and all seven Field Kit pieces", () => {
+    const ids = delivery.assetsFor("complete-system").map((asset) => asset.id);
+    assert.equal(ids.length, 9);
+    assert.deepEqual(ids.slice(0, 2), ["book", "start-here"]);
+    for (let n = 1; n <= 7; n++) assert.ok(ids.includes(`field-kit-0${n}`), `missing field-kit-0${n}`);
   });
 
-  it("gives the Field Kit buyer the seven pieces and not the book", () => {
+  it("gives the Field Kit buyer Start Here and the seven pieces, not the book", () => {
     const assets = delivery.assetsFor("field-kit");
-    assert.equal(assets.length, 7);
+    assert.equal(assets.length, 8);
+    assert.equal(assets[0].id, "start-here");
     assert.equal(delivery.findAsset("field-kit", "book"), null);
     assert.ok(delivery.findAsset("field-kit", "field-kit-07"));
+  });
+
+  it("does not give the book-only buyer Start Here", () => {
+    assert.equal(delivery.findAsset("book", "start-here"), null);
+    assert.ok(delivery.findAsset("field-kit", "start-here"));
+    assert.ok(delivery.findAsset("complete-system", "start-here"));
   });
 
   it("round-trips a Field Kit token", () => {
@@ -117,12 +127,14 @@ describe("entitlements by offer", () => {
       delivery.assetsFor(offers[offerId].product).map((asset) => asset.id);
     const kit = delivery.assetsFor("field-kit").map((asset) => asset.id);
 
-    // $39 Complete System and the $29 Player Price: book and the whole kit.
+    // The Field Kit product leads with Start Here.
+    assert.equal(kit[0], "start-here");
+    // $39 Complete System and the $29 Player Price: book, Start Here and the whole kit.
     assert.deepEqual(ids("system"), ["book", ...kit]);
     assert.deepEqual(ids("system-quiz"), ["book", ...kit]);
     // $25 book: the book only.
     assert.deepEqual(ids("book"), ["book"]);
-    // $19 Field Kit: the kit only.
+    // $19 Field Kit: Start Here and the kit, no book.
     assert.deepEqual(ids("field-kit"), kit);
     // $15 upgrade: the kit, with the book the buyer already owns kept on the
     // same download link.

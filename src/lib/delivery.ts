@@ -47,10 +47,19 @@ const bookAsset: Asset = {
   objectPath: "short-stack-plo/Short_Stack_PLO.pdf",
 };
 
+/** The orientation sheet for book + Field Kit owners. It goes with every
+ * purchase that includes the Field Kit, and not with the book alone, because
+ * it walks through tools a book-only buyer does not have. */
+const startHereAsset: Asset = {
+  id: "start-here",
+  name: "Start Here — Short Stack PLO + Field Kit (PDF)",
+  objectPath: "short-stack-plo/00_Start_Here.pdf",
+};
+
 export const productAssets: Record<ProductId, Asset[]> = {
   book: [bookAsset],
-  "field-kit": fieldKitAssets,
-  "complete-system": [bookAsset, ...fieldKitAssets],
+  "field-kit": [startHereAsset, ...fieldKitAssets],
+  "complete-system": [bookAsset, startHereAsset, ...fieldKitAssets],
 };
 
 export function assetsFor(product: ProductId): Asset[] {
