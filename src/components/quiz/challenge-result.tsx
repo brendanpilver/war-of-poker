@@ -229,8 +229,9 @@ export function ChallengeResult({ result, answers, onRestart }: ChallengeResultP
             ))}
           </p>
           <p className="mt-4 max-w-xl leading-relaxed text-pretty text-bone-muted">
-            One lens, used the same way on every street. Update it whenever a new
-            card or a new action changes the situation.
+            One lens, used the same way on every street, feeding one decision:
+            fold, check, call, bet, or raise. Update it whenever a new card or
+            a new action changes the situation.
           </p>
         </div>
       </section>

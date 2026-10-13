@@ -9,8 +9,8 @@
 const steps = [
   { term: "Hand", question: "What do all four cards contribute?" },
   { term: "SPR", question: "What does the pot and remaining stack make possible?" },
-  { term: "Equity", question: "Which outcomes actually win against the relevant range?" },
   { term: "Player", question: "What does this action mean from this opponent?" },
+  { term: "Equity", question: "Which outcomes actually win against the range that implies?" },
 ];
 
 export function FrameworkStrip({ headingId }: { headingId: string }) {
@@ -31,6 +31,9 @@ export function FrameworkStrip({ headingId }: { headingId: string }) {
           </div>
         ))}
       </dl>
+      <p className="mt-6 leading-snug text-pretty text-bone-muted">
+        Those four feed the decision: fold, check, call, bet, or raise.
+      </p>
     </div>
   );
 }

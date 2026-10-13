@@ -577,17 +577,17 @@ export const hands: ChallengeHand[] = [
     explanation: [
       "Run the four questions in order. Hand: top pair with the king, plus a wrap. With exactly two of your cards and three from the board, any ace, king, jack, nine or eight makes you a straight — seventeen cards. The ace, nine and eight make the best straight. The king and jack make a straight an ace-high one can still beat, so count them, but not as clean.",
       "SPR: about 2.8 on the turn. A pot-sized bet that is called leaves $165 behind in a $270 pot — about 0.6 — so one more bet covers the rest on the river, whichever card comes.",
-      "Equity: this player's calling range is weaker queens, tens, pairs with draws, and draws. Against the study holdings Q♦8♠7♠3♣, T♦9♥6♠5♣ and A♦3♦T♥6♣ you are 85%, 70% and 70%. Against queens-and-tens, Q♣T♦5♠5♦, you are still 42.5%.",
-      "Player: this is the one that decides the size. A loose-passive player calls with worse and seldom raises, so the bet is value, not a bluff. If they do raise, the rare raise from this player is strong and you can reassess. A misreads the player — not folding is a reason to bet good hands, not to stop betting. C plays top pair as if it were alone, ignoring the wrap. D charges a player who calls anything a fraction of what they'll pay.",
+      "Player: this is the one that decides the size. A loose-passive player calls with worse and seldom raises, so the bet is value, not a bluff. Their calling range is weaker queens, tens, pairs with draws, and draws. If they do raise, the rare raise from this player is strong and you can reassess.",
+      "Equity: against that range — the study holdings Q♦8♠7♠3♣, T♦9♥6♠5♣ and A♦3♦T♥6♣ — you are 85%, 70% and 70%. Against queens-and-tens, Q♣T♦5♠5♦, you are still 42.5%. A misreads the player — not folding is a reason to bet good hands, not to stop betting. C plays top pair as if it were alone, ignoring the wrap. D charges a player who calls anything a fraction of what they'll pay.",
     ],
-    principle: "Hand, SPR, equity, player — on every street, in that order.",
+    principle: "Hand, SPR, player, equity — on every street, in that order.",
   },
 ];
 
 export const totalHands = hands.length;
 
 /** The four questions the book reduces every street to. */
-export const fourQuestions = ["Hand", "SPR", "Equity", "Player"] as const;
+export const fourQuestions = ["Hand", "SPR", "Player", "Equity"] as const;
 
 export const survivalCard = {
   name: "The NLH Player's PLO Survival Card",

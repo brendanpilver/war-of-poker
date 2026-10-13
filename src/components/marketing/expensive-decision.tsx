@@ -1,39 +1,49 @@
 import { TrackedCta } from "@/components/analytics/tracked-cta";
 import { CardRow } from "@/components/poker/playing-card";
-import { hands, totalHands } from "@/lib/quiz/hands";
+import { cards } from "@/lib/poker/cards";
+import { totalHands } from "@/lib/quiz/hands";
 import { CHALLENGE_PATH } from "@/lib/short-stack-plo";
 import { Section, SectionHeading } from "./section";
 
 /**
  * One real decision, worked — the page's proof mechanism.
  *
- * Uses the challenge's opening hand, which is approved published material
- * rather than a constructed example. It is a $242 decision: the cost of getting
- * this one spot wrong is several times the price of the system, which is the
- * whole argument made concrete.
+ * A self-contained original example (not a Challenge hand): this component
+ * owns its own cards and facts rather than reading `hands[0]`, so a future
+ * change to the Challenge's hand order or content can't silently break the
+ * story told here. It deliberately does not reuse a book, Field Kit, or
+ * Challenge hand's exact cards -- see the sourcing rule documented in
+ * `src/lib/quiz/hands.ts` -- only the same generic $2/$5, $58 3-bet, $123
+ * pot baseline the book uses throughout as its running example depth.
+ *
+ * It is a $242 decision: the cost of getting this one spot wrong is several
+ * times the price of the system, which is the whole argument made concrete.
  *
  * Kept deliberately short. The long version is the book; this only has to show
  * that the reasoning is real.
  */
 
-const [acesHand] = hands;
+const exampleHand = {
+  hand: cards("As Ah Qd 4c"),
+  board: cards("Ts 9s 7h"),
+};
 
 const framework = [
   {
     term: "Hand",
-    body: "Bare aces. No heart, no useful straight coverage. The nuts right now is T7.",
+    body: "Bare aces. One spade, not enough for the flush draw, and no straight coverage. The nuts right now is J8.",
   },
   {
     term: "SPR",
     body: "1.97. That describes the leverage available — not your cards, and not an instruction to commit.",
   },
   {
-    term: "Equity",
-    body: "A bet folds the hands with little equity and gets called by the straights, sets and wraps that beat you.",
+    term: "Player",
+    body: "This opponent has shown down rundowns and suited connectors after calling 3-bets — exactly what T-9-7 hits.",
   },
   {
-    term: "Player",
-    body: "This opponent has shown down rundowns and suited connectors after calling 3-bets — exactly what 9-8-6 hits.",
+    term: "Equity",
+    body: "Against that range, a bet folds the hands with little equity and gets called by the straights, sets and wraps that beat you.",
   },
 ];
 
@@ -51,8 +61,8 @@ export function ExpensiveDecision({ ctaLocation }: { ctaLocation: string }) {
       <div className="mt-10 grid gap-8 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-5">
           <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
-            <CardRow cards={acesHand.hand} label="Your hand" size="lead" />
-            <CardRow cards={acesHand.board} label="Flop" />
+            <CardRow cards={exampleHand.hand} label="Your hand" size="lead" />
+            <CardRow cards={exampleHand.board} label="Flop" />
           </div>
 
           <dl className="mt-8 flex gap-10">
@@ -82,7 +92,7 @@ export function ExpensiveDecision({ ctaLocation }: { ctaLocation: string }) {
           </p>
           <p className="mt-4 text-lg leading-relaxed text-pretty text-bone">
             Your preflop range advantage is not a flop advantage on this board.
-            The same aces bet comfortably on A♦7♠2♣ — the cards didn&apos;t
+            The same aces bet comfortably on K♣7♦2♠ — the cards didn&apos;t
             change, the board did.
           </p>
 

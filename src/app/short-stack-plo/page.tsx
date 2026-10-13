@@ -30,7 +30,7 @@ import { siteUrl } from "@/lib/site";
 
 const title = "Short Stack PLO: Live Pot-Limit Omaha Strategy | War of Poker";
 const description =
-  "A practical decision system for live Hold'em players moving into PLO. Hand, SPR, Equity, Player — applied on every street. By River Potter, published by War of Poker.";
+  "A practical decision system for live Hold'em players moving into PLO. Hand, SPR, Player, Equity — applied on every street. By River Potter, published by War of Poker.";
 
 export const metadata: Metadata = {
   title,

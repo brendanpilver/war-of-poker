@@ -241,7 +241,7 @@ export const sequence: {
       blocks: [
         {
           kind: "p",
-          text: "A short hand, worked through the four questions the whole system runs on: Hand · SPR · Equity · Player.",
+          text: "A short hand, worked through the four questions the whole system runs on: Hand · SPR · Player · Equity.",
         },
         {
           kind: "p",
@@ -257,15 +257,15 @@ export const sequence: {
           kind: "p",
           text: "It tells you how much is left to play for. It doesn't tell you whether you are still ahead.",
         },
-        { kind: "h", text: "Equity" },
-        {
-          kind: "p",
-          text: "On the flop your two pair was ahead of almost everything that could call. On this turn it trails every straight, and only the four remaining queens and jacks fill it up to a full house.",
-        },
         { kind: "h", text: "Player" },
         {
           kind: "p",
           text: "Ask what called the flop. Hands like A-K, K-9 and 9-8 had gutshots and wraps on Q-J-4, and the ten is the card they were waiting for. A player who calls flops with draws and now bets big is telling you which part of that range arrived.",
+        },
+        { kind: "h", text: "Equity" },
+        {
+          kind: "p",
+          text: "Against that range, your two pair — ahead of almost everything that called the flop — now trails every straight, and only the four remaining queens and jacks fill it up to a full house.",
         },
         {
           kind: "p",

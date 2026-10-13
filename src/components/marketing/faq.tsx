@@ -21,7 +21,7 @@ const faqs = [
   {
     question: "Is this solver-based strategy?",
     answer:
-      "No. Short Stack PLO is practical live strategy built around four questions — Hand, SPR, Equity, and Player. It is written for decisions made at a live table, not for studying solver outputs.",
+      "No. Short Stack PLO is practical live strategy built around four questions — Hand, SPR, Player, and Equity. It is written for decisions made at a live table, not for studying solver outputs.",
   },
   {
     question: "Will playing a shallower stack make me a winning player?",
