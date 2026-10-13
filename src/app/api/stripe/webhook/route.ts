@@ -11,6 +11,7 @@ import { sendEmail } from "@/lib/email/client";
 import { purchaseEmail, renderHtml, renderText } from "@/lib/email/templates";
 import { env } from "@/lib/env";
 import { isOfferId, offers } from "@/lib/offers";
+import { recordPurchaseOnce } from "@/lib/purchases";
 import { siteUrl } from "@/lib/site";
 import { metadataToColumns, stripeClient } from "@/lib/stripe";
 import { markCustomer } from "@/lib/subscribers";
@@ -131,36 +132,37 @@ export async function POST(request: Request) {
     landingPage: attributionColumns.landing_page ?? undefined,
   });
 
-  const { data: purchase, error } = await db
-    .from("purchases")
-    .upsert(
-      {
-        stripe_checkout_session_id: session.id,
-        stripe_payment_intent_id:
-          typeof session.payment_intent === "string" ? session.payment_intent : null,
-        email,
-        subscriber_id: subscriberId,
-        offer_id: offerId,
-        product: offer.product,
-        // The amount Stripe actually collected, not the catalogue price, so the
-        // record stays true if a price changed between checkout and capture.
-        amount_cents: session.amount_total ?? offer.amountCents,
-        currency: session.currency ?? "usd",
-        status: "paid",
-        ...attributionColumns,
-        // Only named for upgrades, so a database without the 0003 column still
-        // records every other sale.
-        ...(upgradeOf ? { upgrade_of: upgradeOf } : {}),
-      },
-      { onConflict: "stripe_checkout_session_id" },
-    )
-    .select("id")
-    .single();
+  const recorded = await recordPurchaseOnce(db, {
+    stripe_checkout_session_id: session.id,
+    stripe_payment_intent_id:
+      typeof session.payment_intent === "string" ? session.payment_intent : null,
+    email,
+    subscriber_id: subscriberId,
+    offer_id: offerId,
+    product: offer.product,
+    // The amount Stripe actually collected, not the catalogue price, so the
+    // record stays true if a price changed between checkout and capture.
+    amount_cents: session.amount_total ?? offer.amountCents,
+    currency: session.currency ?? "usd",
+    status: "paid",
+    ...attributionColumns,
+    // Only named for upgrades, so a database without the 0003 column still
+    // records every other sale.
+    ...(upgradeOf ? { upgrade_of: upgradeOf } : {}),
+  });
 
-  if (error || !purchase) {
-    console.error("[stripe] failed to record purchase", error?.message);
+  if (!recorded.ok) {
+    console.error("[stripe] failed to record purchase", recorded.message);
     return NextResponse.json({ error: "Could not record." }, { status: 500 });
   }
+
+  // A redelivery of a session already recorded: acknowledge it so Stripe stops
+  // retrying, and do nothing else -- no second conversion, no second email.
+  if (!recorded.created) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
+  const purchase = { id: recorded.id };
 
   await recordEvent({
     name: "purchase_completed",
