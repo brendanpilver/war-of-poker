@@ -5,6 +5,7 @@ import {
   SIGNED_URL_TTL_SECONDS,
   verifyDeliveryToken,
 } from "@/lib/delivery";
+import { purchaseAccess } from "@/lib/purchases";
 import { supabaseAdmin } from "@/lib/supabase";
 
 /**
@@ -39,6 +40,25 @@ export async function GET(
   const db = supabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: "Downloads unavailable." }, { status: 503 });
+  }
+
+  // A signed token is necessary but not sufficient: a confirmed full refund
+  // closes the purchase's downloads. A partial refund leaves access open.
+  const access = await purchaseAccess(db, payload.purchaseId);
+  if (access === "unavailable") {
+    return NextResponse.json({ error: "Downloads unavailable." }, { status: 503 });
+  }
+  if (access === "refunded") {
+    return NextResponse.json(
+      { error: "This purchase was refunded, so its downloads are closed." },
+      { status: 403 },
+    );
+  }
+  if (access === "missing") {
+    return NextResponse.json(
+      { error: "This download link is invalid or has expired." },
+      { status: 403 },
+    );
   }
 
   const { data, error } = await db.storage

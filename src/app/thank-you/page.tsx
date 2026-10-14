@@ -63,19 +63,21 @@ async function verify(sessionId: string): Promise<VerifiedPurchase | null> {
     const db = supabaseAdmin();
     const { data: purchase } = (await db
       ?.from("purchases")
-      .select("id")
+      .select("id, status")
       .eq("stripe_checkout_session_id", session.id)
       .maybeSingle()) ?? { data: null };
+    // A fully refunded purchase gets no download link.
+    const active = purchase?.id && purchase.status !== "refunded";
 
     const bookOnly = offer.product === "book";
     const entitlement =
-      bookOnly && purchase?.id ? createUpgradeEntitlement(purchase.id) : null;
+      bookOnly && active ? createUpgradeEntitlement(purchase.id) : null;
 
     return {
       productName: offer.name,
       assetNames: assetsFor(offer.product).map((asset) => asset.name),
       token:
-        purchase?.id && !offer.bookOwnerOnly
+        active && !offer.bookOwnerOnly
           ? createDeliveryToken({ purchaseId: purchase.id, product: offer.product })
           : null,
       email: offer.bookOwnerOnly ? null : (session.customer_details?.email ?? null),

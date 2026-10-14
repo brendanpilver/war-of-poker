@@ -90,13 +90,15 @@ describe("pricing copy", () => {
       assert.doesNotMatch(read(path), /offerId="field-kit-upgrade"/, path);
     }
     // Rendered only for a book download link, or a verified entitlement.
-    assert.match(read("src/app/downloads/page.tsx"), /payload\?\.product === "book"/);
+    assert.match(read("src/app/downloads/page.tsx"), /valid && payload\.product === "book"/);
     assert.match(read("src/app/upgrade/page.tsx"), /verifyUpgradeEntitlement/);
   });
 
   it("never shows an upgrade's download links on the thank-you page", () => {
     // They go by email to the book buyer only; see src/app/thank-you/page.tsx.
     const source = read("src/app/thank-you/page.tsx");
-    assert.match(source, /purchase\?\.id && !offer\.bookOwnerOnly/);
+    assert.match(source, /active && !offer\.bookOwnerOnly/);
+    // ...and never for a fully refunded purchase.
+    assert.match(source, /purchase\.status !== "refunded"/);
   });
 });

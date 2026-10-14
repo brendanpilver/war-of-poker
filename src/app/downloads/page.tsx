@@ -6,6 +6,8 @@ import { FieldKitUpgrade } from "@/components/marketing/field-kit-upgrade";
 import { createUpgradeEntitlement } from "@/lib/book-ownership";
 import { assetsFor, TOKEN_TTL_LABEL, verifyDeliveryToken } from "@/lib/delivery";
 import { legalContactEmail } from "@/lib/legal";
+import { purchaseAccess } from "@/lib/purchases";
+import { supabaseAdmin } from "@/lib/supabase";
 
 /**
  * The purchaser's download page.
@@ -19,6 +21,9 @@ import { legalContactEmail } from "@/lib/legal";
  * entitlement for the button -- the same one its purchase email carries. The
  * download token itself is never accepted as proof by checkout. See
  * `src/lib/book-ownership.ts`.
+ *
+ * A confirmed full refund closes the files: the page says so instead of
+ * listing them, and the download route refuses them independently.
  */
 
 export const metadata: Metadata = {
@@ -34,15 +39,18 @@ export default async function DownloadsPage({
   const raw = params.token;
   const token = typeof raw === "string" ? raw : null;
   const payload = verifyDeliveryToken(token);
+  const access = payload ? await purchaseAccess(supabaseAdmin(), payload.purchaseId) : null;
+  const refunded = access === "refunded";
+  const valid = payload && token && access !== "missing" && !refunded;
   const upgradeEntitlement =
-    payload?.product === "book" ? createUpgradeEntitlement(payload.purchaseId) : null;
+    valid && payload.product === "book" ? createUpgradeEntitlement(payload.purchaseId) : null;
 
   return (
     <>
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto max-w-3xl px-5 pt-16 pb-20 sm:px-8 lg:pt-20 lg:pb-28">
-          {payload && token ? (
+          {valid ? (
             <>
               <p className="font-mono text-[11px] tracking-[0.18em] text-gold uppercase">
                 Your files
@@ -94,6 +102,29 @@ export default async function DownloadsPage({
                 </a>
                 .
               </p>
+            </>
+          ) : refunded ? (
+            <>
+              <h1 className="text-[2.4rem] leading-[1] font-bold tracking-[-0.02em] text-balance text-bone uppercase sm:text-5xl">
+                This purchase was refunded
+              </h1>
+              <p className="mt-6 text-lg leading-relaxed text-pretty text-bone-muted">
+                A full refund closes the downloads for that purchase. If you
+                think this is a mistake, email{" "}
+                <a
+                  href={`mailto:${legalContactEmail}`}
+                  className="text-bone underline decoration-bone/30 underline-offset-4"
+                >
+                  {legalContactEmail}
+                </a>{" "}
+                from the address you bought with.
+              </p>
+              <Link
+                href="/short-stack-plo"
+                className="mt-10 inline-block text-bone underline decoration-bone/30 underline-offset-4 hover:decoration-gold"
+              >
+                Back to Short Stack PLO
+              </Link>
             </>
           ) : (
             <>
