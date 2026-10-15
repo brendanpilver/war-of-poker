@@ -52,13 +52,18 @@ branch as staging, with production environment variables. No new branch, no
 code fork.
 
 **Release rule: production only ever runs a commit that has passed on staging.**
-Staging auto-deploys `main`. Production must **not** auto-deploy. In hPanel,
-open the production app → Deployments, and confirm that automatic deployment
-on push can be switched off, so production is redeployed by hand.
-**If hPanel cannot switch it off**, this is the one case where Hostinger
-genuinely requires a branch: point production at a `release` branch and
-fast-forward it to a staging-verified commit to release. Check this when the
-first production app is created.
+Verified 2026-10-14: a Hostinger web app deploys automatically on every push to
+the branch chosen when it is created ("From pushes to war-of-poker"), and
+offers **Redeploy** but no switch to turn automatic deploys off (Hostinger's
+[GitHub deploy docs](https://docs.hostinger.com/node.js/github)). So production
+tracks a **`production` branch used only as a release pointer**:
+
+- Staging tracks `main`, as now.
+- Releasing = fast-forwarding `production` to a commit already verified on
+  staging: `git push origin <verified-sha>:production`. No commits are ever
+  made on `production`, so there is still one codebase.
+- Rolling back the code = pushing the previous verified sha to `production`
+  (a non-fast-forward push, made deliberately).
 
 **Two production apps, same code and same production services.**
 
@@ -79,12 +84,12 @@ Settings (copy staging exactly):
 
 | Setting | Value |
 |---|---|
-| Repository / branch | `brendanpilver/war-of-poker` / `main` (or `release`, see above) |
+| Repository / branch | `brendanpilver/war-of-poker` / **`production`** (release pointer, see above) |
 | Root directory | `./` |
 | Framework | Next.js |
 | Build and output | Default (staging's, which run `npm ci`/`npm run build`/`npm start`) |
 | Node version | 22.x (`npm test` needs 22.18+; Next 16 needs 20.9+) |
-| Auto-deploy | **Off** |
+| Deploys | Automatic on push to `production` only |
 | SSL | Hostinger's free certificate on each app's domain (`launch`, then `warofpoker.com` and `www`) |
 
 Production environment variables (values never committed or pasted in chat):
@@ -132,10 +137,12 @@ Steps:
    password saved in your password manager.
 2. SQL editor → run, in order, the files in `supabase/migrations/`:
    `0001_growth_loop.sql`, `0002_ten_hand_challenge.sql`,
-   `0003_pricing_architecture.sql`. They are the exact schema validated on
-   staging.
+   `0003_pricing_architecture.sql`, `0004_delivery_email_state.sql`. They are
+   the exact schema validated on staging.
 3. Verify with the same read-only checks used on staging: five tables, the
-   three check constraints, `purchases.upgrade_of`, RLS on all five tables.
+   three check constraints, `purchases.upgrade_of`,
+   `purchases.delivery_emailed_at` and `delivery_email_claimed_at`, RLS on all
+   five tables.
 4. Create the bucket (SQL editor):
    `insert into storage.buckets (id, name, public) values ('products', 'products', false);`
    Confirm `public = false` and that `pg_policies` has no storage policies.
@@ -155,9 +162,8 @@ nine files (from the publication set).
 
 ### Live Stripe
 
-1. Confirm the Stripe **account** is activated for live payments (business
-   details, bank account, identity). "War of Poker sandbox" is the test
-   environment; live mode is the account itself.
+1. **Done (owner, 2026-10-14):** the Stripe account is activated for live
+   payments. "War of Poker sandbox" stays the staging environment.
 2. Set the statement descriptor (e.g. `WAR OF POKER`) and support email.
 3. Developers → API keys (live) → copy the secret key into production
    `STRIPE_SECRET_KEY`.
@@ -187,6 +193,25 @@ Offers that must behave exactly as on staging:
 | `field-kit` | $19 | Start Here + Field Kit 01–07 |
 | `field-kit-upgrade` | $15, book owners only | same nine (book kept on the same link) |
 
+### Refunds, downloads and email recovery (commit `f469aa6`)
+
+- **Refund policy:** a confirmed **full** refund closes the purchase's
+  downloads (download route, downloads page and thank-you page all check the
+  purchase status) and revokes a book's upgrade entitlement. A **partial**
+  refund leaves the purchase `paid`, so access continues.
+- **Refund before purchase:** if `charge.refunded` arrives before
+  `checkout.session.completed`, there is no row to mark; it is acknowledged and
+  logged. The completed handler asks Stripe whether the payment is already
+  fully refunded and, if so, records it as `refunded` with no conversion and no
+  delivery.
+- **Purchase email recovery:** one webhook delivery claims the send
+  (`delivery_email_claimed_at`) and marks success (`delivery_emailed_at`). On
+  failure the claim is released and the webhook returns 500, so Stripe's
+  redelivery sends it. Purchases still owed an email:
+  `select id, email, created_at from purchases where status = 'paid' and delivery_emailed_at is null and created_at < now() - interval '15 minutes';`
+  To resend one: Stripe → the endpoint → find that session's
+  `checkout.session.completed` delivery → **Resend**.
+
 ### Resend
 
 The `warofpoker.com` domain already sends (staging's mail reached a Gmail inbox
@@ -204,17 +229,24 @@ This doesn't block sales.
 
 ### Staging-only replay test (before cutover)
 
-After the idempotency fix is deployed to staging:
+Run on `f469aa6`. Setup: the 2026-10-13 $29 test purchase
+(`b83645cf…`) has its email marked owed, as if the original send failed.
 
-1. Stripe (test mode) → Workbench → Events → open the `checkout.session.completed`
-   event of the 2026-10-13 17:36 UTC $29 test purchase → **Resend** to the
-   staging endpoint. Do it twice.
-2. Expected: both deliveries return 200 with `duplicate: true`. Still one
-   purchase row, one `purchase_completed` event, no second email.
-3. Refund that test payment in Stripe (test) → the row becomes `refunded`.
-   Resend the `checkout.session.completed` event once more → the row **stays**
-   `refunded`, and there's still one `purchase_completed` event.
+| Step (Stripe sandbox) | Expected |
+|---|---|
+| 1. Resend that purchase's `checkout.session.completed` to the staging endpoint | One recovery purchase email arrives; `delivery_emailed_at` set; still 1 row, 1 conversion |
+| 2. Resend it again | No email; nothing changes |
+| 3. Refund the $29 payment in full | Row → `refunded`; its download links → 403; downloads page says refunded |
+| 4. Resend `checkout.session.completed` once more | Row stays `refunded`; no email; 1 conversion |
+| 5. Optional, refund-first ordering: disable the staging endpoint, make a new $29 test purchase and refund it, re-enable, then resend `charge.refunded` first and `checkout.session.completed` second | Row created as `refunded`; no conversion; no email |
 
+**Result, 2026-10-14/15 — passed. Release commit: `f469aa6`.** Replays: one row,
+one conversion, exactly one recovery email (claimed and sent once). The full
+refund was delivered as `charge.refunded` → row `refunded`; all nine downloads
+return 403 "This purchase was refunded, so its downloads are closed."; the
+downloads page shows the refund message and no links. (The first refund attempt
+on 10/14 had not actually been made in Stripe, which is why nothing was
+delivered then.) Step 5 is covered by unit tests and was not run.
 
 ## 4 · WordPress preservation — copy, never move
 
@@ -486,6 +518,13 @@ Maintained in the session report; summary of the conditions:
 - **Verified:** staging end to end (payment, webhook once, record, email, nine
   downloads, token rejection); the webhook idempotency fix (unit tests, then
   the staging replay test); the production-URL build output.
+- **Support mail, resolved 2026-10-14:** mail to `@warofpoker.com` was not
+  received at all (Hostinger's MX answered `554 Relay access denied` for every
+  address). The owner set up Hostinger email for the domain (Starter Business,
+  free trial to 2027-10-14 with auto-renewal on), created the mailbox
+  `river@warofpoker.com`, and made `contact@warofpoker.com` an alias of it. Both
+  are now accepted by `mx1.hostinger.com` (`250 Ok`); unknown addresses are
+  still rejected. MX records are unchanged.
 - **Must be true before authorization:** release commit verified on staging;
   production Supabase on Pro with nine files verified; live rehearsal passed
   and refunded; production app auto-deploy off; validation copy of the shop

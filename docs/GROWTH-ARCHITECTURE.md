@@ -467,7 +467,9 @@ set's Word export. See [`public/downloads/README.md`](../public/downloads/README
 2. Locally: `stripe listen --forward-to localhost:3000/api/stripe/webhook`,
    then copy the printed `whsec_…` into `STRIPE_WEBHOOK_SECRET`.
 3. In production: add an endpoint at `https://<domain>/api/stripe/webhook`
-   subscribed to `checkout.session.completed`, and copy its signing secret.
+   subscribed to **both** `checkout.session.completed` and `charge.refunded`,
+   and copy its signing secret. Without `charge.refunded`, refunds never reach
+   the app: downloads stay open and upgrade entitlements are not revoked.
 
 No Stripe Products need creating: line items are built inline from the offer
 catalogue.
