@@ -218,8 +218,9 @@ analytics. Anything new is added only on explicit direction.
   built from `main`. Hostinger deploys on every push to a web app's branch, so
   production tracks a `production` branch used only as a fast-forward release
   pointer: **production only ever runs a commit that has passed on staging.**
-- Production has its own Supabase project on a plan that never pauses, and
-  Stripe **live** mode. Staging keeps its own project and Stripe **test** mode.
+- Production has its own Supabase project (Free or Pro is an open decision;
+  see `HOSTINGER-CUTOVER.md` §2) and Stripe **live** mode. Staging keeps its
+  own project and Stripe **test** mode.
 - As of 2026-10-15 the cutover has **not** been executed; the runbook and its
   go/no-go list are in `HOSTINGER-CUTOVER.md`.
 
