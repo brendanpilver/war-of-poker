@@ -430,6 +430,55 @@ platform data.
 
 ---
 
+## Production operational bridge (documented, not built)
+
+The validated loop has three manual joints: an operator renders accepted
+specs on a Mac, posts the videos, and pastes platform numbers back in. To
+run without depending on one laptop, four pieces are needed. **None is built;
+building them waits until Short Stack PLO is live and the owner directs it.**
+
+1. **Accepted proposals create render jobs.** The accept action already
+   creates one draft `content_pieces` row per spec. It would also insert one
+   `render_jobs` row per piece: the frozen spec, its hash, status
+   (`queued → claimed → rendered | failed`), attempts, renderer version,
+   voice and calibration, and the output location. Unique on
+   `(content_id, spec hash)`, so a retried accept cannot queue twice. **A spec
+   is immutable once queued**; a change is a new content ID, so every result
+   stays attached to exactly what was published.
+2. **A separate render worker produces the videos.** Not the Hostinger web
+   app (no Chrome, no speech engine, and rendering must never compete with
+   checkout). Candidates: a scheduled GitHub Actions job (Linux runners ship
+   Chrome; narration would need a Linux speech engine such as Piper, or a
+   hosted voice), or a small always-on VPS. The worker claims queued jobs
+   with its own narrowly scoped credential, renders with
+   `scripts/render-pipeline.ts`, uploads the MP4, captions, copy and
+   `sync.json` to a **private** storage bucket, and marks the job. It holds no
+   Stripe or email credentials, and it refuses any spec whose example is not
+   approved.
+3. **Publication is recorded against the original spec.** Each rendered
+   video is reviewed on `/growth/experiments` (signed, expiring preview URL)
+   and approved before it can be published — **human approval before
+   publication stays mandatory, automated or not.** Posting stays manual at
+   first; platform upload APIs could come later, but only for approved
+   pieces. Either way the post URL, platform post id and publish time are
+   written to the piece, whose spec and tracked link are already fixed.
+4. **Platform metrics flow back automatically.** Today's CSV import writes
+   `content_metric_imports` with `source = 'manual'`. An API puller (YouTube
+   Analytics first, others after app review) would write the same rows with
+   `source = 'api'`, keyed by content ID, platform and capture date. The
+   six-hour job, the evaluator and the planner already consume these rows
+   unchanged, so the next batch is planned from them with no further work.
+
+Invariants to keep: the analytics job, the render worker and the payment
+system stay separate processes with separate credentials; nothing publishes
+without approval; renders stay private until posted; a failed render or
+import is visible on the dashboard rather than silent.
+
+Open decisions for that work: where the worker runs, the narration voice
+and engine, the storage bucket, and which platform APIs to connect.
+
+---
+
 ## Activation (after launch, on direction)
 
 1. Approve examples (eight or more, in matched lesson pairs).
