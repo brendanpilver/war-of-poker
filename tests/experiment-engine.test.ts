@@ -9,6 +9,7 @@ import { exampleById, type MarketingExample } from "../src/lib/experiments/examp
 import { emptyFunnel, withImport, type PieceMetrics } from "../src/lib/experiments/metrics";
 import {
   DEFAULT_BASELINE,
+  DEFAULT_SERIES,
   currentBaseline,
   planNextBatch,
   type PlannerExperiment,
@@ -213,6 +214,10 @@ describe("next-batch planner", () => {
     assert.equal(rec.evidenceStrength, "moderate");
     assert.equal(currentBaseline([won]).hook, "challenge", "one win does not move the baseline");
 
+    const judgedOnStarts: PlannerExperiment = { ...won, primary_metric: "challenge_start_rate" };
+    const replication = planNextBatch(input({ experiments: [judgedOnStarts] })).recommendations[0];
+    assert.equal(replication.experiment.primaryMetric, "challenge_start_rate", "judged as the original was");
+
     const replicated: PlannerExperiment = { ...won, id: "EXP-002", kind: "replication", replicates: "EXP-001", started_at: daysAgo(10) };
     assert.equal(currentBaseline([won, replicated]).hook, "financial-consequence");
   });
@@ -252,5 +257,61 @@ describe("accepting a proposal", () => {
   it("refuses a needs-examples proposal as a batch", () => {
     const rec = planNextBatch(input({ examples: [base!] })).recommendations[0];
     assert.equal(validateAcceptance(rec, new Set(), lookup).ok, false);
+  });
+});
+
+describe("inconclusive results", () => {
+  // Treatment looks about 25% better, but the arms overlap: not significant.
+  const overlapping = () => [
+    ...[1, 2, 3, 4].map((i) => piece(i, "control", metrics([20, 30, 25, 33][i - 1]))),
+    ...[1, 2, 3, 4].map((i) => piece(i + 4, "treatment", metrics([38, 22, 41, 34][i - 1]))),
+  ];
+
+  it("asks for more testing instead of declaring a winner or a null", () => {
+    const result = evaluateExperiment(experiment, overlapping(), now);
+    assert.equal(result.ready, true);
+    assert.ok(result.comparisons[0].pValue > 0.05);
+    assert.equal(result.evidence, "insufficient");
+    assert.equal(result.decision, "insufficient_evidence");
+    assert.match(result.learning ?? "", /no winner declared/i);
+  });
+
+  it("is followed by one re-test on fresh examples, then retired", () => {
+    const inconclusive: PlannerExperiment = { ...experiment, status: "concluded", decision: "insufficient_evidence", evidence: "insufficient", learning: "Inconclusive" };
+    const rec = planNextBatch(input({ experiments: [inconclusive] })).recommendations[0];
+    assert.match(rec.title, /^Re-test hook: financial-consequence vs challenge/);
+    assert.match(rec.rationale[0], /Re-tests EXP-001/);
+    assert.equal(rec.evidenceStrength, "weak");
+    assert.equal(rec.kind, "experiment");
+
+    const second: PlannerExperiment = { ...inconclusive, id: "EXP-002", started_at: daysAgo(5) };
+    const next = planNextBatch(input({ experiments: [inconclusive, second] })).recommendations[0];
+    assert.doesNotMatch(next.title, /financial-consequence vs challenge/);
+  });
+});
+
+describe("series and hook are independent", () => {
+  it("keeps the existing series constant across hook arms", () => {
+    const rec = planNextBatch(input()).recommendations[0];
+    assert.equal(rec.experiment.factors[0], "hook");
+    const hooks = new Set(rec.items.map((s) => s.settings.hook));
+    assert.equal(hooks.size, 2);
+    assert.deepEqual([...new Set(rec.items.map((s) => s.series))], [DEFAULT_SERIES]);
+  });
+
+  it("counts a level pair as tested whichever arm held it", () => {
+    const reversed: PlannerExperiment = {
+      ...experiment,
+      status: "concluded",
+      decision: "stop",
+      evidence: "no-detectable-difference",
+      learning: null,
+      variants: [
+        { key: "control", settings: { hook: "financial-consequence" } },
+        { key: "treatment", settings: { hook: "challenge" } },
+      ],
+    };
+    const rec = planNextBatch(input({ experiments: [reversed] })).recommendations[0];
+    assert.doesNotMatch(rec.title, /financial-consequence vs challenge/);
   });
 });

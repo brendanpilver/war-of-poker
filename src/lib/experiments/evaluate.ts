@@ -30,7 +30,15 @@ export type ExperimentPlan = {
   minDenominatorPerArm: number;
   /** Days after start at which an unfinished test is closed as inconclusive. */
   deadlineDays: number;
+  /**
+   * The smallest relative difference in the primary metric worth acting on,
+   * fixed before the test. A non-significant result at least this large is
+   * inconclusive -- re-test -- rather than evidence of no difference.
+   */
+  minimumEffect?: number;
 };
+
+export const DEFAULT_MINIMUM_EFFECT = 0.2;
 
 export type Variant = { key: string; settings: Partial<ContentSettings> };
 
@@ -143,7 +151,10 @@ export function evaluateExperiment(
 
   const arms: ArmResult[] = experiment.variants.map((variant) => {
     const mine = pieces.filter((piece) => piece.variant === variant.key);
-    const published = mine.filter((piece) => piece.publishedAt !== null && piece.status === "published");
+    // A post scheduled for later is not yet published.
+    const published = mine.filter(
+      (piece) => piece.publishedAt !== null && piece.status === "published" && Date.parse(piece.publishedAt) <= now.getTime(),
+    );
     const ripe = published.filter(matured);
     const values = ripe
       .map((piece) => (piece.metrics ? metricValue(primary, piece.metrics) : null))
@@ -272,6 +283,15 @@ export function evaluateExperiment(
       learning = winner.treatmentBetter
         ? `${level(winner.treatment)} outperformed ${level(control.key)} on ${metricLabels[primary].toLowerCase()} in ${experiment.kind === "replication" ? "a replication" : "one test"}. ${experiment.kind === "replication" ? "Replicated: adopt as the baseline." : "Replicate on fresh examples before adopting it."}`
         : `${level(control.key)} outperformed ${level(winner.treatment)} on ${metricLabels[primary].toLowerCase()}. Keep the baseline.`;
+    } else if (inconclusive(arms, comparisons, plan.minimumEffect ?? DEFAULT_MINIMUM_EFFECT)) {
+      const best = comparisons[0];
+      const control = arms[0].primaryMean ?? 0;
+      const treatment = arms.find((a) => a.key === best.treatment)?.primaryMean ?? 0;
+      const relative = control > 0 ? ((treatment - control) / control) * 100 : null;
+      evidence = "insufficient";
+      decision = "insufficient_evidence";
+      decisionReason = `Permutation test on ${metricLabels[primary].toLowerCase()} per piece: p = ${best.pValue.toFixed(3)}, above alpha ${alpha}. The observed difference (${relative === null ? "from a zero baseline" : `${relative > 0 ? "+" : ""}${relative.toFixed(0)}%`} for ${best.treatment}) is at least the pre-registered minimum effect of ${((plan.minimumEffect ?? DEFAULT_MINIMUM_EFFECT) * 100).toFixed(0)}%, but this sample cannot tell it from chance.`;
+      learning = `Inconclusive: no winner declared between ${experiment.variants.map((v) => level(v.key)).join(" and ")}. The difference is large enough to matter if real, so re-test the same comparison on fresh examples.`;
     } else {
       evidence = "no-detectable-difference";
       decision = "stop";
@@ -294,6 +314,20 @@ export function evaluateExperiment(
     decisionReason,
     learning,
   };
+}
+
+/**
+ * A non-significant comparison whose observed relative difference is at
+ * least the minimum effect: worth more data, not a verdict either way.
+ */
+function inconclusive(arms: ArmResult[], comparisons: Comparison[], minimumEffect: number): boolean {
+  const control = arms[0]?.primaryMean;
+  return comparisons.some((c) => {
+    const treatment = arms.find((a) => a.key === c.treatment)?.primaryMean;
+    if (control === null || control === undefined || treatment === null || treatment === undefined) return false;
+    if (control === 0) return treatment !== 0;
+    return Math.abs(treatment - control) / Math.abs(control) >= minimumEffect;
+  });
 }
 
 export function describeVariant(variant: Variant): string {

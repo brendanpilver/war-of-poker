@@ -110,9 +110,9 @@ function lensStrip(active: Beat["factor"] | undefined, shown: Set<string>): stri
 }
 
 function choicesSvg(example: MarketingExample, reveal: boolean): string {
-  const w = 440;
+  const gap = 32;
+  const w = Math.min(440, (FRAME.width - 160 - gap * (example.choices.length - 1)) / example.choices.length);
   const h = 110;
-  const gap = 40;
   const total = example.choices.length * w + (example.choices.length - 1) * gap;
   const left = (FRAME.width - total) / 2;
   return example.choices
@@ -122,7 +122,7 @@ function choicesSvg(example: MarketingExample, reveal: boolean): string {
       const stroke = isAnswer ? color.gold : color.line;
       const fill = isAnswer ? color.gold : color.card;
       const text = isAnswer ? color.ink : reveal ? color.faint : color.bone;
-      return `<rect x="${x}" y="1205" width="${w}" height="${h}" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="4"/><text x="${x + w / 2}" y="1275" text-anchor="middle" font-family="${SANS}" font-weight="700" font-size="46" fill="${text}">${esc(choice)}</text>`;
+      return `<rect x="${x}" y="1205" width="${w}" height="${h}" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="4"/><text x="${x + w / 2}" y="1275" text-anchor="middle" font-family="${SANS}" font-weight="700" font-size="${example.choices.length > 2 ? 40 : 46}" fill="${text}">${esc(choice)}</text>`;
     })
     .join("");
 }
@@ -185,7 +185,7 @@ export function renderScenes(
 
       // Table.
       parts.push(cardRow(example.board, 520, 170, 240, 26));
-      const potLabel = example.facing ? `POT $${example.pot}  ·  BET $${example.facing}` : `POT $${example.pot}`;
+      const potLabel = example.facing ? `POT $${example.pot}  ·  TO CALL $${example.facing}` : `POT $${example.pot}`;
       parts.push(textLines([potLabel], FRAME.width / 2, 712, 40, { family: MONO, fill: color.gold }));
       parts.push(cardRow(example.hand, 880, 150, 210, 22));
       parts.push(textLines([`${example.heroPosition.toUpperCase()} · BEHIND $${example.behind}`], FRAME.width / 2, 1050, 34, { family: MONO, fill: color.muted, weight: 400 }));

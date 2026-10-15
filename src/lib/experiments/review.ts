@@ -140,6 +140,7 @@ export async function reviewRecommendation(
   db: SupabaseClient,
   input: { id: string; decision: "accept" | "reject" | "revise"; reason: string; revision: string | null },
   now = new Date(),
+  lookup: (id: string) => MarketingExample | null = exampleById,
 ): Promise<ReviewOutcome> {
   const { data: rec, error } = await db
     .from("recommendations")
@@ -173,7 +174,7 @@ export async function reviewRecommendation(
 
   const { data: usedRows } = await db.from("content_pieces").select("example_id").not("example_id", "is", null);
   const used = new Set((usedRows ?? []).map((row) => row.example_id as string));
-  const valid = validateAcceptance(body, used);
+  const valid = validateAcceptance(body, used, lookup);
   if (!valid.ok) return { ok: false, message: valid.error };
 
   // Allocate ids. One operator, one review at a time: a collision fails the
@@ -217,7 +218,7 @@ export async function reviewRecommendation(
   if (created.error) return { ok: false, message: `Could not register the experiment: ${created.error.message}` };
 
   const rows = specs.map((spec) => {
-    const example = exampleById(spec.exampleId) as MarketingExample;
+    const example = lookup(spec.exampleId) as MarketingExample;
     const timeline = buildTimeline(spec, example);
     const copy = timeline.ok ? companionCopy(spec, example, timeline.timeline) : null;
     return {
@@ -279,6 +280,7 @@ export async function setPieceStatus(
   db: SupabaseClient,
   input: { contentId: string; status: string; publishedUrl: string | null; publishedOn: string | null },
   now = new Date(),
+  lookup: (id: string) => MarketingExample | null = exampleById,
 ): Promise<ReviewOutcome> {
   const { data: piece } = await db
     .from("content_pieces")
@@ -292,7 +294,7 @@ export async function setPieceStatus(
 
   const update: Record<string, unknown> = { status: input.status, updated_at: now.toISOString() };
   if (input.status === "approved" && piece.example_id) {
-    const example = exampleById(piece.example_id as string);
+    const example = lookup(piece.example_id as string);
     if (example?.status !== "approved") {
       return { ok: false, message: `${piece.content_id} uses example ${piece.example_id}, which is not approved.` };
     }

@@ -59,6 +59,17 @@ export const wordsPerSecond: Record<Pacing, number> = {
   brisk: 3.4,
 };
 
+/**
+ * Narration speed, words per minute. The pacing setting governs the voice as
+ * well as the captions; the timeline gives each beat whichever is longer.
+ */
+export const narrationWordsPerMinute: Record<Pacing, number> = {
+  // Measured narration runs about 180 a minute, but its pauses vary more;
+  // timing it at 170 keeps the fit check from approving lines that overrun.
+  measured: 170,
+  brisk: 205,
+};
+
 /** Table only, or table plus the action-so-far timeline. */
 export const visuals = ["table", "table-timeline"] as const;
 export type Visual = (typeof visuals)[number];
@@ -159,18 +170,12 @@ export const factorLabels: Record<keyof ContentSettings, string> = {
 };
 
 /**
- * The content series each hook publishes under. Series codes predate this
- * engine and are part of every content ID, so a hook test is also a series
- * comparison. Proposed mapping, following each series' premise in
- * `src/lib/content/series.ts`; `curiosity` has no premise of its own and sits
- * under HSEP, the lesson-led series.
+ * Content series and hook are independent attributes. The series is the
+ * existing editorial line a piece belongs to (`src/lib/content/series.ts`)
+ * and the first part of its content ID; the hook is how its first seconds
+ * are framed. An experiment holds the series constant across arms, so a hook
+ * test never doubles as a series comparison.
  */
-export const seriesForHook: Record<HookType, SeriesCode> = {
-  "financial-consequence": "EPM",
-  challenge: "PRC",
-  "common-mistake": "HIPR",
-  curiosity: "HSEP",
-};
 
 export type ContentSpec = {
   specVersion: typeof SPEC_VERSION;

@@ -10,7 +10,7 @@ import {
   type ExperimentRecord,
   type ExperimentResults,
 } from "./evaluate";
-import { marketingExamples } from "./examples";
+import { marketingExamples, type MarketingExample } from "./examples";
 import { dailyReportKey, slotKey, weeklyReportKey } from "./job-schedule";
 import {
   aggregateFunnel,
@@ -108,8 +108,16 @@ function settingsOf(row: PieceRow): ContentSettings | null {
   return parsed.ok ? parsed.settings : null;
 }
 
-/** The job, end to end. Never throws. */
-export async function runAnalyticsJob(options: { now?: Date; force?: boolean } = {}): Promise<JobResult> {
+/**
+ * The job, end to end. Never throws.
+ *
+ * `examples` replaces the example library for the planner. Only the
+ * synthetic demonstration (scripts/experiment-demo/) passes it; production
+ * always plans from `marketingExamples`.
+ */
+export async function runAnalyticsJob(
+  options: { now?: Date; force?: boolean; examples?: MarketingExample[] } = {},
+): Promise<JobResult> {
   const now = options.now ?? new Date();
   const runKey = slotKey(now);
   const db = supabaseAdmin();
@@ -155,7 +163,7 @@ export async function runAnalyticsJob(options: { now?: Date; force?: boolean } =
   }
 
   try {
-    const summary = await analyse(db, now, runKey);
+    const summary = await analyse(db, now, runKey, options.examples ?? marketingExamples);
     await db
       .from("analytics_runs")
       .update({ status: "succeeded", finished_at: new Date().toISOString(), summary })
@@ -179,7 +187,12 @@ function must<T>(result: { data: T | null; error: { message: string } | null }, 
   return result.data as T;
 }
 
-async function analyse(db: SupabaseClient, now: Date, runKey: string): Promise<Record<string, unknown>> {
+async function analyse(
+  db: SupabaseClient,
+  now: Date,
+  runKey: string,
+  examples: MarketingExample[],
+): Promise<Record<string, unknown>> {
   // 3. Read. --------------------------------------------------------------
   const pieces = must(
     await db
@@ -415,7 +428,7 @@ async function analyse(db: SupabaseClient, now: Date, runKey: string): Promise<R
     now,
     experiments: experiments as PlannerExperiment[],
     pieces: plannerPieces,
-    examples: marketingExamples,
+    examples,
     reviews,
   });
 

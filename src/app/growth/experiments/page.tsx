@@ -79,7 +79,8 @@ async function load() {
 }
 
 function Health({ runs, now }: { runs: RunRow[]; now: number }) {
-  const lastSuccess = runs.find((r) => r.status === "succeeded");
+  // Ignore slots dated after now (only a simulated clock produces them).
+  const lastSuccess = runs.find((r) => r.status === "succeeded" && Date.parse(r.started_at) <= now);
   const ageHours = lastSuccess ? (now - Date.parse(lastSuccess.started_at)) / 3_600_000 : null;
   const stale = ageHours === null || ageHours > 8;
   return (

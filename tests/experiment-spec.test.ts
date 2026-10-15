@@ -70,7 +70,7 @@ describe("timeline", () => {
   it("writes only the example's text and the numbers it states", () => {
     const built = buildTimeline(spec(), example);
     assert.ok(built.ok);
-    assert.equal(built.timeline.beats[0].text, "$123 in the pot. $242 behind.");
+    assert.equal(built.timeline.beats[0].text, "$246 in the pot. $242 behind.");
     const allowed = new Set([
       example.setupLine, example.prompt, example.answerLine, example.principle,
       ...example.beats.map((b) => b.text),

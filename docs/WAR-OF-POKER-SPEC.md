@@ -185,22 +185,62 @@ canonical doctrine rather than inventing or silently changing the doctrine.**
 
 ## Technical Architecture
 
-**Current, established:**
+> Updated 2026-10-15 under explicit direction from the project owner. Detail
+> lives in the implementation records: [`GROWTH-ARCHITECTURE.md`](./GROWTH-ARCHITECTURE.md),
+> [`HOSTINGER-CUTOVER.md`](./HOSTINGER-CUTOVER.md) and
+> [`CONTENT-EXPERIMENTS.md`](./CONTENT-EXPERIMENTS.md).
 
-- Next.js (App Router)
-- TypeScript, strict mode
-- Tailwind CSS
-- ESLint
-- npm
-- `/src` directory layout
-- Git
+**Application stack, established:**
 
-Deliberately **not** installed yet: Supabase, Stripe, shadcn/ui, analytics, AI
-APIs, CMS systems, and any other significant dependency. These are to be added
-deliberately, one decision at a time.
+- Next.js 16 (App Router), React 19, TypeScript in strict mode, Tailwind CSS,
+  ESLint, npm, a `/src` directory layout, Git.
+- **Supabase** (Postgres) for subscribers, events, purchases, content and the
+  experiment engine's tables. Row Level Security is on with no policies; the
+  service-role key is used only on the server.
+- **Stripe Checkout** for payment. A purchase is recorded only by the
+  signature-verified webhook; prices resolve server-side from an offer id.
+- **Resend** for transactional and sequence email.
+- **First-party analytics:** events post to `/api/events` and are stored in
+  our own database. No third-party analytics, tracking or marketing scripts
+  run in the application.
+- Paid files sit in a private storage bucket behind signed, expiring tokens.
+- Tests run on Node's built-in test runner; there is no test framework.
 
-TODO: Hosting, rendering strategy per route, image pipeline, caching, and
-environments.
+Deliberately **not** installed: shadcn/ui, AI APIs, CMS systems, third-party
+analytics. Anything new is added only on explicit direction.
+
+**Hosting and environments, decided:**
+
+- **Production is Hostinger**, a Node.js web app (`next start`, Node 22.x) at
+  `https://warofpoker.com`, replacing the WordPress site, which moves intact to
+  `shop.warofpoker.com`. **Vercel is obsolete.**
+- **Staging** is a second Hostinger web app at `https://staging.warofpoker.com`,
+  built from `main`. Hostinger deploys on every push to a web app's branch, so
+  production tracks a `production` branch used only as a fast-forward release
+  pointer: **production only ever runs a commit that has passed on staging.**
+- Production has its own Supabase project on a plan that never pauses, and
+  Stripe **live** mode. Staging keeps its own project and Stripe **test** mode.
+- As of 2026-10-15 the cutover has **not** been executed; the runbook and its
+  go/no-go list are in `HOSTINGER-CUTOVER.md`.
+
+**Rendering:** marketing pages are prerendered. Checkout, the Stripe webhook,
+downloads, `/thank-you`, `/upgrade` and the `/growth` dashboards render on
+demand in the Node runtime. Every integration is optional at build time; a
+missing variable disables one capability, never a page (`.env.example`).
+
+**Scheduled work:** Hostinger cron calls bearer-token endpoints:
+`/api/email/dispatch` for the email sequence and, once activated,
+`/api/analytics/run` for the content experiment engine. The analytics job
+only reads purchases, subscribers and events, and writes only its own tables.
+
+**Content experiment engine (built, not activated):** spec-driven Shorts, a
+reviewed hand library, experiment evaluation and a review queue at
+`/growth/experiments`. Video rendering is **not** part of the web app: it
+runs as a batch command on an operator machine with Google Chrome and a
+speech engine, which the Hostinger runtime does not provide. A test enforces
+that no application code imports the renderer.
+
+TODO: image pipeline, caching strategy.
 
 ---
 

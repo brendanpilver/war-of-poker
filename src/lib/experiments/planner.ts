@@ -1,4 +1,4 @@
-import type { ExperimentPlan, ExperimentRecord, Variant } from "./evaluate";
+import { DEFAULT_MINIMUM_EFFECT, type ExperimentPlan, type ExperimentRecord, type Variant } from "./evaluate";
 import { supportsHook, type MarketingExample } from "./examples";
 import {
   factorSummaries,
@@ -16,12 +16,12 @@ import {
   factorLabels,
   factorLevels,
   levelKey,
-  seriesForHook,
   type ContentSettings,
   type ContentSpec,
   type ExperimentalFactor,
 } from "./spec";
 import { minPiecesPerArm, seededRandom, seededShuffle } from "./stats";
+import type { SeriesCode } from "@/lib/content/series";
 
 /**
  * The next-generation planner.
@@ -52,17 +52,27 @@ export const DEFAULT_BASELINE: ContentSettings = {
   lesson: "spr",
   durationSec: 25,
   countdownSec: 3,
-  pacing: "measured",
+  // Brisk (about 205 words a minute) is what lets a narrated six-beat Short
+  // fit 25 seconds; measured pacing is a level to test, mostly at 40s.
+  pacing: "brisk",
   visual: "table",
   cta: "challenge",
   platform: "youtube-shorts",
   template: "short-v1",
 };
 
+/**
+ * The series engine-generated Shorts publish under, held constant across arms.
+ * PRC ("a single decision, answered and explained") is the existing series
+ * whose premise matches the six-beat format. One constant to change.
+ */
+export const DEFAULT_SERIES: SeriesCode = "PRC";
+
 export const DEFAULT_PLAN: Omit<ExperimentPlan, "piecesPerArm" | "minDenominatorPerArm"> = {
   alpha: 0.05,
   horizonDays: 7,
   deadlineDays: 42,
+  minimumEffect: DEFAULT_MINIMUM_EFFECT,
 };
 
 const REJECTION_COOLDOWN_DAYS = 30;
@@ -156,13 +166,24 @@ export function currentBaseline(experiments: PlannerExperiment[]): ContentSettin
 type Candidate = {
   kind: "exploration" | "replication";
   replicates: string | null;
+  /** An inconclusive experiment this candidate re-tests on fresh examples. */
+  followsUp?: string;
   factor: ExperimentalFactor;
   control: string | number;
   treatment: string | number;
 };
 
 function topicKeyOf(candidate: Candidate, platform: string): string {
-  return `${candidate.kind}:${candidate.factor}:${candidate.control}->${candidate.treatment}:${platform}`;
+  const kind = candidate.followsUp ? "follow-up" : candidate.kind;
+  return `${kind}:${candidate.factor}:${candidate.control}->${candidate.treatment}:${platform}`;
+}
+
+/** The two levels an experiment compared on `factor`, order-free. */
+function pairKey(experiment: PlannerExperiment, factor: string): string | null {
+  const a = variantLevel(experiment, "control", factor);
+  const b = variantLevel(experiment, "treatment", factor);
+  if (a === undefined || b === undefined) return null;
+  return [levelKey(a as string | number), levelKey(b as string | number)].sort().join("|");
 }
 
 function variantLevel(experiment: PlannerExperiment, key: string, factor: string) {
@@ -194,18 +215,39 @@ function candidates(
     });
   }
 
-  // 2. Untested levels, highest-priority factor first.
+  // 2. Re-test an inconclusive comparison on fresh examples -- once. Two
+  // inconclusive tests of the same pair mean the difference, if any, is too
+  // small for this batch size; the pair then counts as tested.
+  for (const experiment of input.experiments) {
+    if (experiment.decision !== "insufficient_evidence") continue;
+    const factor = experiment.factors[0] as ExperimentalFactor;
+    const pair = pairKey(experiment, factor);
+    if (!pair) continue;
+    const samePair = input.experiments.filter((e) => e.factors[0] === factor && pairKey(e, factor) === pair);
+    if (samePair.some((e) => e.started_at > experiment.started_at)) continue;
+    const control = variantLevel(experiment, "control", factor) as string | number;
+    const treatment = variantLevel(experiment, "treatment", factor) as string | number;
+    if (control !== baseline[factor] && treatment !== baseline[factor]) continue;
+    const other = control === baseline[factor] ? treatment : control;
+    if (samePair.filter((e) => e.decision === "insufficient_evidence").length >= 2) continue;
+    out.push({ kind: "exploration", replicates: null, followsUp: experiment.id, factor, control: baseline[factor], treatment: other });
+  }
+
+  // 3. Untested levels, highest-priority factor first. A pair counts as
+  // tested whichever arm held which level.
   for (const factor of experimentalFactors) {
     const control = baseline[factor];
     const tested = new Set(
       input.experiments
-        .filter(
-          (e) =>
-            e.factors.includes(factor) &&
-            variantLevel(e, "control", factor) === control &&
-            e.decision !== "insufficient_evidence",
-        )
-        .map((e) => levelKey(variantLevel(e, "treatment", factor) as string | number)),
+        .filter((e) => {
+          if (!e.factors.includes(factor)) return false;
+          const pair = pairKey(e, factor);
+          if (!pair || !pair.split("|").includes(levelKey(control))) return false;
+          if (e.decision !== "insufficient_evidence") return true;
+          // Inconclusive pairs are re-tested once (step 2), then retired.
+          return input.experiments.filter((o) => o.factors[0] === factor && pairKey(o, factor) === pair).length >= 2;
+        })
+        .map((e) => (pairKey(e, factor) as string).split("|").find((level) => level !== levelKey(control)) as string),
     );
     const remaining = factorLevels[factor].filter(
       (level) => level !== control && !tested.has(levelKey(level)),
@@ -223,6 +265,7 @@ function candidates(
       return score(b) - score(a);
     });
     for (const treatment of ranked) {
+      if (out.some((c) => c.factor === factor && levelKey(c.treatment) === levelKey(treatment))) continue;
       out.push({ kind: "exploration", replicates: null, factor, control, treatment });
     }
   }
@@ -270,7 +313,7 @@ function specFor(
     specVersion: SPEC_VERSION,
     engineVersion: ENGINE_VERSION,
     contentId: null,
-    series: seriesForHook[settings.hook],
+    series: DEFAULT_SERIES,
     exampleId: example.id,
     settings: { ...settings, lesson: example.lesson },
     experimentId: null,
@@ -376,6 +419,14 @@ export function planNextBatch(input: PlannerInput): PlannerOutput {
     }
 
     const metrics = chooseMetrics(factor, impressionsCoverage);
+    // A replication is judged exactly as the test it replicates, or the two
+    // results would not be comparable.
+    const replicated = input.experiments.find((e) => e.id === candidate.replicates);
+    if (replicated && replicated.primary_metric !== metrics.primary) {
+      metrics.secondary = [metrics.primary, ...metrics.secondary.filter((m) => m !== replicated.primary_metric)];
+      metrics.primary = replicated.primary_metric;
+      metrics.note = `A replication keeps ${replicated.id}'s primary metric (${metricLabels[replicated.primary_metric].toLowerCase()}) so the two results are comparable; ${metricLabels[metrics.secondary[0]].toLowerCase()} is reported alongside.`;
+    }
     const minDenominatorPerArm =
       metrics.primary === "purchase_rate" ? 200 : metrics.primary === "visitors" ? 0 : 100;
     const plan: ExperimentPlan = { ...DEFAULT_PLAN, piecesPerArm, minDenominatorPerArm };
@@ -411,6 +462,13 @@ export function planNextBatch(input: PlannerInput): PlannerOutput {
         `${candidate.replicates} found a difference at its pre-registered threshold. One test is not enough to change the baseline; this replication uses fresh examples.`,
       );
       if (original?.learning) evidenceNotes.push(original.learning);
+    } else if (candidate.followsUp) {
+      evidenceStrength = "weak";
+      const original = input.experiments.find((e) => e.id === candidate.followsUp);
+      evidenceNotes.push(
+        `${candidate.followsUp} was inconclusive: the difference it saw is large enough to matter but its sample could not tell it from chance. No winner was declared.`,
+      );
+      if (original?.learning) evidenceNotes.push(original.learning);
     } else if (summary && summary.levels.filter((l) => l.pieces >= 3).length >= 2) {
       evidenceStrength = "weak";
     }
@@ -440,8 +498,10 @@ export function planNextBatch(input: PlannerInput): PlannerOutput {
     const rationale = [
       candidate.kind === "replication"
         ? `Replicates ${candidate.replicates}: ${levelName(candidate.treatment)} against ${levelName(candidate.control)}, on examples not used before.`
-        : `${factorLabels[factor]} is the highest-priority setting with an untested level against the current baseline (${levelName(candidate.control)}).`,
-      `Varies only ${factorLabels[factor].toLowerCase()}. Held constant: ${Object.entries(heldConstant).map(([k, v]) => `${k}=${v}`).join(", ")}.`,
+        : candidate.followsUp
+          ? `Re-tests ${candidate.followsUp}, which was inconclusive: the same comparison on fresh examples, rather than a winner declared on too little evidence. Analysed on its own, under the same pre-registered rule.`
+          : `${factorLabels[factor]} is the highest-priority setting with an untested level against the current baseline (${levelName(candidate.control)}).`,
+      `Varies only ${factorLabels[factor].toLowerCase()}. Held constant: series=${DEFAULT_SERIES}, ${Object.entries(heldConstant).map(([k, v]) => `${k}=${v}`).join(", ")}.`,
       `Lessons are matched: each pair is two different approved examples on the same lesson, one per arm, assigned by a seeded coin flip.`,
       `${piecesPerArm} pieces per arm is the smallest batch for which the per-piece permutation test can reach alpha ${plan.alpha} at all.`,
       `Publish one piece per day, in the listed order, on ${platform} only. Each piece is judged on its first ${plan.horizonDays} days; the decision waits until every piece has had them.`,
@@ -506,7 +566,7 @@ export function planNextBatch(input: PlannerInput): PlannerOutput {
           topicKey,
           dedupeKey: `${topicKey}:${pairs.flat().map((e) => e.id).sort().join(",")}`,
           engineVersion: ENGINE_VERSION,
-          title: `${candidate.kind === "replication" ? "Replicate" : "Test"} ${factorLabels[factor].toLowerCase()}: ${levelName(candidate.treatment)} vs ${levelName(candidate.control)} (${items.length} Shorts)`,
+          title: `${candidate.kind === "replication" ? "Replicate" : candidate.followsUp ? "Re-test" : "Test"} ${factorLabels[factor].toLowerCase()}: ${levelName(candidate.treatment)} vs ${levelName(candidate.control)} (${items.length} Shorts)`,
           summary: `Generate ${piecesPerArm} ${levelName(candidate.treatment)} and ${piecesPerArm} ${levelName(candidate.control)} ${factorLabels[factor].toLowerCase()} Shorts on matched lessons (${lessonsUsed.join(", ")}), everything else identical. Judged on ${metricLabels[metrics.primary].toLowerCase()} per piece after ${plan.horizonDays} days each.`,
           evidenceStrength,
           evidenceNotes,

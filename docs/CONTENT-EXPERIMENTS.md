@@ -8,6 +8,11 @@
 > format rules come from [`SHORTS-CONTENT-FORMAT.md`](./SHORTS-CONTENT-FORMAT.md);
 > the funnel it measures is described in
 > [`GROWTH-ARCHITECTURE.md`](./GROWTH-ARCHITECTURE.md).
+>
+> **Not deployed.** The engine lives on the `feature/content-experiment-engine`
+> branch and has been validated only against an isolated local database with
+> synthetic data (§ Validation). It is not merged, not on staging, and not in
+> production; activation waits until after the Short Stack PLO launch.
 
 ---
 
@@ -68,17 +73,20 @@ piece as `content_pieces.spec` and read directly by the renderer:
 | `lesson` | the ten Challenge concepts + position, player-read | Matched across arms, never tested as a factor in V1. |
 | `durationSec` | 15, 25, 40 | An example that cannot be read in the time is refused, not rushed. |
 | `countdownSec` | 3, 5 | The reveal-timing setting. Beat order is fixed by the six-beat format. |
-| `pacing` | measured (2.8 words/s), brisk (3.4) | Caption speed only. The River Potter voice is not a variable. |
+| `pacing` | brisk (default), measured | Caption speed (3.4 / 2.8 words a second) and narration speed (about 205 / 180 words a minute). The voice itself is not a variable. Brisk is the baseline because a narrated six-beat Short only fits 25 seconds at that pace. |
 | `visual` | table, table-timeline | Cards, board, pot and stack always; the action timeline optionally. |
 | `cta` | challenge, product-page, survival-card | **survival-card is unavailable**: the card is delivered only from the Challenge results screen, so there is no page a Survival Card Short could honestly send a viewer to. The engine never selects it. |
 | `platform` | youtube-shorts, tiktok, instagram-reels | A blocking variable: one experiment runs on one platform. |
 | `template` | short-v1 | Versioned so a template change is visible in the data. |
 
-**Series follow the hook** (`seriesForHook`): financial-consequence → EPM,
-challenge → PRC, common-mistake → HIPR, curiosity → HSEP. Content IDs already
-require a series, and each series' premise matches one hook. The consequence:
-for engine-generated content a series comparison *is* a hook comparison.
-`curiosity` → HSEP is the loosest fit. **Owner to confirm.**
+**Series and hook are independent.** The series is the existing editorial
+line a piece belongs to (EPM, PRC, HIPR, HSEP in `src/lib/content/series.ts`,
+unchanged) and the first part of its content ID; the hook is how its first
+seconds are framed. An experiment holds the series constant across arms, so
+a hook test never doubles as a series comparison. Engine batches publish
+under **PRC** ("a single decision, answered and explained", the series whose
+premise matches the six-beat format) — one constant, `DEFAULT_SERIES` in
+`planner.ts`. A revised proposal may set a different series.
 
 ---
 
@@ -102,13 +110,26 @@ with that example's numbers (`hookLine`, the CTA).
   as a watermarked draft.
 - **Principles cite the book.** `provenance.source` names the passage.
 
-The library currently holds **one candidate**, `mx-001` (top set at SPR ≈ 2,
-grounded in Chapter 5's SPR zones and Chapter 6's "At low SPR, top set is
-often happy to play for stacks"). It was drafted by Claude Code for review;
-its notes explain the judgement call (calling is close; the example teaches
-the SPR arithmetic). **Until at least eight examples are approved, the engine
-can only propose "approve examples" items** — which is the correct behaviour,
-not a fault.
+The library holds **nine candidates, none approved**:
+
+| Id | Lesson | Spot | Decision |
+| -- | ------ | ---- | -------- |
+| mx-001 | spr | Top set, 3-bet pot, SPR ≈ 2 | Raise all-in |
+| mx-002 | spr | Bare aces, three-way, SPR ≈ 5 | Fold |
+| mx-003 | spr | Nut flush draw + wrap, 3-bet pot, SPR ≈ 2 | Raise all-in |
+| mx-004 | nuttiness | Jack-high flush draw, four-way | Fold |
+| mx-005 | nuttiness | Low straight facing bet and pot raise | Fold |
+| mx-006 | draw-quality | Straight draw, ten nut rivers vs 33% price | Fold |
+| mx-007 | draw-quality | Wrap, fourteen nut rivers vs 25% price | Call |
+| mx-008 | price | Bluff-catcher vs a third-pot river bet | Call |
+| mx-009 | price | Missed nut flush draw, five nut rivers vs 33% | Fold |
+
+mx-002 to mx-009 are the first experiment's batch: four lessons, two hands
+each. Each cites its book passage, and every card fact, out count, equity
+and price is checked by `tests/marketing-examples.test.ts`. The approval
+sheet is generated from the same data: `npm run approval:batch` writes
+`renders/approval-batch.html`. **Until eight are approved, the engine can only
+propose "approve examples"** — the correct behaviour, not a fault.
 
 ---
 
@@ -118,27 +139,52 @@ not a fault.
 npm run render:short -- path/to/specs.json --out renders
 ```
 
-Add `--draft` to render a candidate example (every frame watermarked) and
-`--frames-only` to skip the video. `specs.json` may be one spec, an array, or
-the `{ "specs": [...] }` that `/growth/specs?experiment=EXP-001` returns.
+Add `--draft` to render a candidate example (every frame watermarked),
+`--silent` to skip narration, and `--frames-only` to skip the video.
+`specs.json` may be one spec, an array, or the `{ "specs": [...] }` that
+`/growth/specs?experiment=EXP-001` returns.
 
 Per spec it writes `renders/<content id>/`: `spec.json`, `frames/*.svg`,
-`captions.srt`, `copy.md` (description with the tracked link, social post,
-narration script, article draft), and `video.mp4`.
+`narration/*.wav`, `captions.srt`, `copy.md` (description with the tracked
+link, social post, timed narration script, article draft), `video.mp4`, and
+`sync.json`.
 
-**How:** `render.ts` draws one 1080 × 1920 SVG per beat — cuts, not
-animation. The script paints those frames to a canvas in headless Google
-Chrome and records them with the browser's own MediaRecorder (H.264 MP4 on
-Chrome 155; WebM where MP4 is unavailable). Recording is real time, so a
-25-second Short takes about 30 seconds. **No dependency was added**: neither
-Remotion nor ffmpeg is installed, and this needs neither. Set `CHROME_PATH`
-if Chrome is elsewhere.
+**How** (`scripts/render-pipeline.ts`):
 
-**Limits, stated plainly:** the video is silent — narration is a script for a
-voice-over — and the look is provisional: the site's palette (sampled from
-the real logo and cover) and system fonts, because `BRAND.md` has not chosen
-typefaces or colours. Remotion would be the natural step up if motion or
-audio becomes necessary; it is a dependency decision for the owner.
+1. Each beat's line is turned into speech text (`spokenText`: "K-7-2" →
+   "king, seven, two", "$246" → "two forty-six") and synthesised with macOS
+   `say`, voice *Reed (English (US))*.
+2. Each clip's speech is measured, and the timeline gives every beat at least
+   its caption's reading time and its narration plus a breath. A spec that
+   cannot be narrated in its duration is refused, not rushed.
+3. `render.ts` draws one 1080 × 1920 SVG per beat — cuts, not animation.
+4. Headless Google Chrome paints the frames to a canvas and plays the
+   narration (plus a quiet tick each countdown second) on one AudioContext
+   clock, recording both with the browser's own MediaRecorder: an H.264 + AAC
+   MP4.
+5. The finished file's audio is decoded and measured per beat; `sync.json`
+   records each narrated beat's loudness, the silence after it, and how late
+   any frame appeared after its line began.
+
+**No dependency was added**: no Remotion, no ffmpeg, no npm package, no paid
+API. The engine's own fit check uses an estimate of speaking time
+(`speakingTime`, calibrated against this voice so that it errs long); the
+`say` rate settings were measured, because the engine's rate is not linear.
+
+**Where it runs.** On a Mac with Google Chrome — an operator laptop today.
+**Not on Hostinger:** the production runtime is a managed Node.js web app with
+no Chrome and no speech engine, and rendering is CPU work that has no place
+beside checkout. Nothing in `src/` imports the renderer
+(`tests/experiment-boundaries.test.ts`). Cost per Short: about 30–50 seconds
+of one machine and nothing else, so a batch of eight takes under ten minutes.
+A Linux runner would need Chrome plus a Linux speech engine (for example
+Piper) — a dependency decision for the owner, not made here.
+
+**Limits, stated plainly:** the voice is a stock synthetic voice, not River
+Potter's; whether to keep it, record a human voice-over against the timed
+narration script, or license a voice is open. The look is provisional: the
+site's palette (sampled from the real logo and cover) and system fonts,
+because `BRAND.md` has not chosen typefaces or colours.
 
 ---
 
@@ -209,7 +255,14 @@ Decisions (`evaluate.ts`):
 | Guardrail breached (completion rate fell, or refund rate rose) | — | revise |
 | p ≤ alpha, treatment better | supported | expand → replicate on fresh examples |
 | p ≤ alpha, control better | supported | stop |
-| p > alpha | no-detectable-difference | stop (which is *not* evidence of equality) |
+| p > alpha, observed difference ≥ the pre-registered minimum effect (20%) | insufficient | insufficient_evidence → **re-test** on fresh examples |
+| p > alpha, observed difference below it | no-detectable-difference | stop (which is *not* evidence of equality) |
+
+An inconclusive comparison is re-tested **once**, as its own experiment under
+the same rule — never pooled with the first, which would turn two looks into
+one result. Two inconclusive tests of the same pair retire it: any difference
+is too small for this batch size. A replication is judged on the original
+test's primary metric, so the two results are comparable.
 
 **A level becomes the baseline only after a replication also supports it.**
 Every experiment carries a standing confounder note (organic distribution;
@@ -331,16 +384,76 @@ RLS on with no policies:
 
 ---
 
+## Validation (2026-10-15)
+
+An isolated test environment lives in `scripts/experiment-demo/`: Postgres 16
+and PostgREST 12 (Supabase's API layer, with its 1,000-row response cap)
+behind a gateway at Supabase's `/rest/v1` path, in Docker, bound to
+`127.0.0.1`. The application's own Supabase client talks to it unchanged.
+
+```bash
+docker compose -f scripts/experiment-demo/docker-compose.yml up -d
+scripts/experiment-demo/apply-migrations.sh
+npm run demo:experiments
+docker compose -f scripts/experiment-demo/docker-compose.yml down -v
+```
+
+`npm run demo:experiments` drives the real job, planner, evaluation, review
+functions and renderer through simulated time with **synthetic, labelled
+data** (sessions `synthetic-…`, `@example.invalid` emails, `cs_synthetic_…`
+Stripe ids, example.invalid post URLs), on copies of the candidate hands
+approved *for the demo only*. It writes `renders/experiment-demo/report.md`.
+
+What it showed, against a real database:
+
+| Gen | Engine proposed | Synthetic result | What changed next |
+| --- | --------------- | ---------------- | ----------------- |
+| 1 | Hook: financial-consequence vs challenge, primary = visitors (no impressions yet) | Interim look: *collecting*, no verdict. At horizon: p = 0.029, supported → **replicate** | Same comparison on fresh examples, same metric |
+| 2 | Replication | p = 0.029, supported → **adopt** | Baseline hook becomes financial-consequence |
+| 3 | Hook: common-mistake vs the new baseline, primary = visitors per 1,000 impressions (now imported) | +23% for treatment, p = 0.343 → **inconclusive** | No winner declared |
+| 4 | **Re-test** of the same pair on fresh examples | — | A revised 25-second narrated video rendered from this spec |
+
+Also verified against that database: migrations 0001–0005 apply in order and
+0005 re-applies as a no-op; RLS is on for all eleven tables, and the anon key
+sees zero rows and cannot write; a repeat call in the same slot is skipped,
+a forced rerun keeps one snapshot per window and one open proposal; daily and
+weekly reports are stored once per period; with the database unreachable the
+job returns 503 and the monitor receives a `/fail` ping; the dashboard renders
+experiments, results, proposals and their reasons. Over HTTP on a local
+server: no token and a wrong token get 401, the cron secret runs the job,
+and `?force=1` is honoured only for the operator token.
+
+**Not tested against a real database:** a Supabase-hosted project (the test
+used Supabase's API layer, not its hosting), the Hostinger cron trigger, a
+real healthchecks.io check, Resend delivery of the reports, and any real
+platform data.
+
+---
+
+## Activation (after launch, on direction)
+
+1. Approve examples (eight or more, in matched lesson pairs).
+2. Merge the branch; deploy through staging as usual.
+3. Run migration 0005 on staging, then production.
+4. Set `CRON_SECRET`, `OPERATOR_EMAIL`, `HEALTHCHECK_PING_URL` (and
+   `GROWTH_DASHBOARD_TOKEN` if not set) on each environment.
+5. Create the six-hour Hostinger cron job and the external check
+   (§ Schedule it on Hostinger).
+6. Confirm a succeeded run on `/growth/experiments`, then review the first
+   proposal.
+
+---
+
 ## Open questions for the owner
 
-- **Approve examples.** Review `mx-001`; the first experiment needs eight
-  approved examples (four lessons × two).
-- **Series mapping.** Confirm hook → series, especially curiosity → HSEP.
-- **Survival Card CTA.** It needs its own landing page before it can be tested.
+- **Approve examples.** mx-002 to mx-009 are the first batch; mx-001 is spare.
+- **Voice.** Stock synthetic narration, a recorded voice-over, or a licensed
+  voice.
+- **Survival Card CTA.** Disabled until it has its own landing page; tests use
+  the 10-Hand Challenge.
 - **Visual identity.** Frames use the site palette and system fonts pending
   `BRAND.md`.
 - **Platform API connections.** Manual import until one is directed.
-- **`WAR-OF-POKER-SPEC.md` § Technical Architecture** still says Supabase,
-  Stripe and analytics are not installed. `AGENTS.md` asks for architecture
-  to be reflected there, but it is a doctrine file, so it was not edited
-  without direction.
+- **`WAR-OF-POKER-SPEC.md`** § Data Architecture and § Analytics are still
+  stale ("No database has been chosen", "Nothing is installed"); only
+  § Technical Architecture was updated, as directed.

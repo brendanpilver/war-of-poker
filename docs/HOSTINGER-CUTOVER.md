@@ -227,13 +227,13 @@ Jobs) running a few times a day:
 `curl -fsS -X POST -H "Authorization: Bearer <GROWTH_DASHBOARD_TOKEN>" https://warofpoker.com/api/email/dispatch`.
 This doesn't block sales.
 
-### Analytics job
+### Analytics job (not part of launch)
 
-`POST /api/analytics/run` runs the content experiment engine every six hours.
-It needs migration `0005`, `CRON_SECRET`, and its own cron job. Setup steps
-and external monitoring are in
-[`CONTENT-EXPERIMENTS.md` § Schedule it on Hostinger](./CONTENT-EXPERIMENTS.md#schedule-it-on-hostinger).
-It only reads purchases and events, and doesn't block sales.
+The content experiment engine is built on the `feature/content-experiment-engine`
+branch and is **not** part of the cutover. It is activated after launch, on
+direction, through staging first. Its steps are in
+[`CONTENT-EXPERIMENTS.md` § Activation](./CONTENT-EXPERIMENTS.md#activation-after-launch-on-direction).
+When active it only reads purchases and events, and doesn't block sales.
 
 ### Staging-only replay test (before cutover)
 
