@@ -28,6 +28,19 @@ export const env = {
   deliverySecret: read("DELIVERY_SECRET"),
   /** Bearer token for the /growth dashboard. */
   growthDashboardToken: read("GROWTH_DASHBOARD_TOKEN"),
+  /**
+   * Bearer token for the scheduled analytics job only. Separate from the
+   * operator token so the cron command stored in hPanel can run the job and
+   * do nothing else.
+   */
+  cronSecret: read("CRON_SECRET"),
+  /** Where the daily and weekly experiment reports are sent. */
+  operatorEmail: read("OPERATOR_EMAIL"),
+  /**
+   * Dead-man's-switch URL (healthchecks.io-style). Pinged on every successful
+   * run and at `<url>/fail` on a failed one; the service alerts when pings stop.
+   */
+  healthcheckPingUrl: read("HEALTHCHECK_PING_URL"),
 };
 
 export const hasSupabase = Boolean(env.supabaseUrl && env.supabaseServiceRoleKey);

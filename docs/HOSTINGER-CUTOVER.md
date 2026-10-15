@@ -227,6 +227,14 @@ Jobs) running a few times a day:
 `curl -fsS -X POST -H "Authorization: Bearer <GROWTH_DASHBOARD_TOKEN>" https://warofpoker.com/api/email/dispatch`.
 This doesn't block sales.
 
+### Analytics job
+
+`POST /api/analytics/run` runs the content experiment engine every six hours.
+It needs migration `0005`, `CRON_SECRET`, and its own cron job. Setup steps
+and external monitoring are in
+[`CONTENT-EXPERIMENTS.md` § Schedule it on Hostinger](./CONTENT-EXPERIMENTS.md#schedule-it-on-hostinger).
+It only reads purchases and events, and doesn't block sales.
+
 ### Staging-only replay test (before cutover)
 
 Run on `f469aa6`. Setup: the 2026-10-13 $29 test purchase

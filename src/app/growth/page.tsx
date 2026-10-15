@@ -331,7 +331,10 @@ export default async function GrowthPage({ searchParams }: PageProps<"/growth">)
           Growth
         </h1>
         <p className="mt-3 text-bone-muted">
-          War of Poker · Short Stack PLO acquisition funnel
+          War of Poker · Short Stack PLO acquisition funnel ·{" "}
+          <a href="/growth/experiments" className="underline hover:text-gold">
+            Content experiments
+          </a>
         </p>
 
         {metrics ? (

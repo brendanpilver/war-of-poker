@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --import ./tests/register.mjs --test 'tests/**/*.test.ts'"
+    "test": "node --import ./tests/register.mjs --test 'tests/**/*.test.ts'",
+    "render:short": "node --import ./tests/register.mjs scripts/render-short.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

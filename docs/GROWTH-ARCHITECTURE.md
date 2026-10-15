@@ -35,6 +35,8 @@ Everything below serves that.
 | `/upgrade` | Where a book owner's permanent upgrade link lands. Verifies the entitlement; grants no downloads. |
 | `/api/upgrade-links` | Operator only. Regenerates one customer's upgrade link(s) by `purchaseId` or `email` — never a bulk list. `no-store`. Sends nothing. |
 | `/growth` | Internal dashboard. Operator token only. |
+| `/growth/experiments` | Content experiment dashboard and review queue. Operator cookie only. See [`CONTENT-EXPERIMENTS.md`](./CONTENT-EXPERIMENTS.md). |
+| `/growth/specs` | Content specs of a batch, as JSON for the renderer. Operator cookie or bearer token. |
 | `/contact`, `/privacy`, `/terms` | Pre-existing legal pages. |
 
 ### API
@@ -49,6 +51,7 @@ Everything below serves that.
 | `GET/POST /api/content` | operator bearer token | Content pipeline for automation. |
 | `POST /api/email/dispatch` | operator bearer token | Sends due sequence emails. |
 | `POST /api/growth/session` | operator token in body | Exchanges token for an httpOnly cookie. |
+| `POST /api/analytics/run` | `CRON_SECRET` or operator token | The six-hour analytics job. See [`CONTENT-EXPERIMENTS.md`](./CONTENT-EXPERIMENTS.md). |
 
 ---
 
@@ -214,7 +217,10 @@ the split is a shape, not a census. That is stated on the dashboard.
   challenge state refreshed on every upsert. `quiz_score` is bounded 0–10 by
   `supabase/migrations/0002_ten_hand_challenge.sql`.
 - **`events`** — the raw funnel log. Every dashboard number is derived from
-  here, so a metric added later can be computed from history.
+  here, so a metric added later can be computed from history. Reads page
+  through it 1,000 rows at a time (`src/lib/supabase-pages.ts`): Supabase's
+  API caps every response at its "Max rows" setting, 1,000 by default,
+  silently, whatever `.limit()` asks for.
 - **`purchases`** — keyed on `stripe_checkout_session_id` for idempotency,
   because Stripe retries.
 - **`email_sends`** — unique on `(subscriber_id, sequence_key)`, so a retry

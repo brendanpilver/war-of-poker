@@ -100,6 +100,13 @@ second video is not a reason to publish an unverified number.
 
 ## Still undecided
 
+> **Update 2026-10-15.** A first production system now exists under the
+> owner's direction: content specs, a hand library, a renderer, and the
+> experiment loop are described in [`CONTENT-EXPERIMENTS.md`](./CONTENT-EXPERIMENTS.md).
+> It follows this document's six beats, sourcing rule and voice. Its visual
+> treatment is provisional, and the items below that it does not settle remain
+> open.
+
 This document sets the format's shape, not its production plan. Left for
 explicit direction when the video system itself is built: platform(s) and
 cadence, who or what drafts a Short's hand and script, the review gate before

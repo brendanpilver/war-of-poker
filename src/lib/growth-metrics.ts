@@ -1,6 +1,7 @@
 import { offers, type OfferId } from "./offers";
 import { hands } from "./quiz/hands";
 import { supabaseAdmin } from "./supabase";
+import { fetchAllRows } from "./supabase-pages";
 
 /**
  * The growth dashboard's numbers.
@@ -130,16 +131,27 @@ export async function loadGrowthMetrics(days = 30): Promise<GrowthMetrics | null
     challengeLeadsResult,
     challengeCustomersResult,
   ] = await Promise.all([
-    db
-      .from("events")
-      .select("name, content_id, utm_source, props")
-      .gte("created_at", since)
-      .limit(50000),
-    db
-      .from("purchases")
-      .select("offer_id, amount_cents, content_id")
-      .eq("status", "paid")
-      .gte("created_at", since),
+    fetchAllRows<EventRow>(
+      (from, to) =>
+        db
+          .from("events")
+          .select("name, content_id, utm_source, props")
+          .gte("created_at", since)
+          .order("id")
+          .range(from, to),
+      200_000,
+    ),
+    fetchAllRows<PurchaseRow>(
+      (from, to) =>
+        db
+          .from("purchases")
+          .select("offer_id, amount_cents, content_id")
+          .eq("status", "paid")
+          .gte("created_at", since)
+          .order("id")
+          .range(from, to),
+      50_000,
+    ),
     db
       .from("subscribers")
       .select("id", { count: "exact", head: true })
@@ -161,12 +173,15 @@ export async function loadGrowthMetrics(days = 30): Promise<GrowthMetrics | null
   ]);
 
   if (eventsResult.error) {
-    console.error("[growth] events query failed", eventsResult.error.message);
+    console.error("[growth] events query failed", eventsResult.error);
     return null;
   }
 
-  const events = (eventsResult.data ?? []) as EventRow[];
-  const purchaseRows = (purchasesResult.data ?? []) as PurchaseRow[];
+  if (eventsResult.truncated) {
+    console.warn("[growth] events read hit its row ceiling; counts are a floor");
+  }
+  const events = eventsResult.rows;
+  const purchaseRows = purchasesResult.rows;
 
   const countOf = (name: string) => events.filter((e) => e.name === name).length;
 
